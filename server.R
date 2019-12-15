@@ -1,7 +1,8 @@
 rm(list = ls())
 
-library(tidyverse)
-library(weathercan)
+library(tidyverse) # we live in the tidyverse!
+library(weathercan) # download ECCC station info and data
+library(DT) # datatable()
 
 
 function(input, output, session) {
@@ -35,6 +36,7 @@ function(input, output, session) {
           textInput("tc_id", label = h5("Enter Transport Canada ID"), value = "")
           
         }
+      
     }) # End of render for ui_selected
       
     # Interactive side bar UI (transfer numeric ID to input)
@@ -45,55 +47,82 @@ function(input, output, session) {
           build_inputs(as.numeric(input$climateid_submenu))
         } else if (input$main_selector == 'WMO ID' && 
                    (!is.null(input$wmoid_submenu))){
-          build_inputs(as.numeric(input$second_submenu))
+          build_inputs(as.numeric(input$wmoid_submenu))
         } else if (input$main_selector == 'TC ID' && 
                   (!is.null(input$tcid_submenu))){
           build_inputs(as.numeric(input$tcid_submenu))
         }
+      
     }) # End of ui_numeric_inputs
     
     
     # Retrieve all station meta-data
     map_data_raw <- weathercan::stations_dl(verbose = FALSE, quiet = TRUE)
     
-    # Generate the data for the map by calling coordinates, labels, and date ranges from the HYDAT database
+    # Data availability re-arrange
     record.range <- map_data_raw %>% 
       
         # Grab hourly measurement record length
         filter(interval == "hour") %>%
         select(station_name, station_id, H_start = start, H_end = end) %>%
         
-        # Grab daily & monthly measurement record lengths
+        # Grab daily measurement record lengths
         left_join(
-              
-          
               # Grab daily measurement record length
               map_data_raw %>% 
-              filter(interval == "day") %>%
-              select(station_name, station_id, D_start = start, D_end = end),
-              
-              
-              # Grab monthly measurement record length
-              map_data_raw %>% 
-                  filter(interval == "month") %>%
-                  select(station_name, station_id, M_start = start, M_end = end),
-              
-              by = c(station_name, station_id)
-              
-        ) # end of left_join()
-    
-    # same sation could have multiple entry (different intervals)
-    # only use the first occurrence for map plotting
-    unique_stn <- map_data_raw %>% group_by(station_name) %>%
-    
-    map_data_plotting <- map_data_raw %>%
+                  filter(interval == "day") %>%
+                  select(station_name, station_id, D_start = start, D_end = end),
+                  by = c("station_name", "station_id")
+        ) %>%
         
-        mutate(text = paste(sep = "<br/>", paste("<b>", unique_stn$station_name, "</b>"), 
-                            unique_stn$station_name, 
-                            HYD_STATUS,
-                            paste0("Flow Record: from ", Qfrom, " to ", Qto, " (", Qn, " Yrs)"),
-                            paste0("Stage Record: from ", Hfrom, " to ", Hto, " (", Hn, " Yrs)")
+        left_join(
+            # Grab monthly measurement record length
+            map_data_raw %>% 
+                filter(interval == "month") %>%
+                select(station_name, station_id, M_start = start, M_end = end),
+                by = c("station_name", "station_id")
+        ) # End of Pipe for record.range
+        
+    
+    # re-arrange data into format for plotting
+    station.tibble <- map_data_raw %>% 
+                  group_by(station_id) %>% 
+                  slice(1) %>% 
+                  ungroup() %>%
+                  select(prov:tz) %>%
+                  left_join(record.range, by = c("station_name", "station_id"))
+    
+    # station data tags for leaflet map
+    map.data.plotting <- station.tibble %>%
+        
+        mutate(text = paste(sep = "<br/>", paste("<b>", station_name, "</b>"), 
+                            paste0("Climate ID : ", climate_id),
+                            paste0("Elevation (m) : ", elev),
+                            paste0("Hourly Record: from ", H_start, " to ", H_end, " (", H_end-H_start, " Yrs)"),
+                            paste0("Daily Record: from ", D_start, " to ", D_end, " (", D_end-D_start, " Yrs)"),
+                            paste0("Monthly Record: from ", M_start, " to ", M_end, " (", M_end-M_start, " Yrs)")
+                            
         ))
+    
+    # Leaflet map rendering
+    output$MapPlot <- renderLeaflet({
+      map.data.plotting %>% 
+        leaflet() %>%
+        addTiles() %>%
+        addMarkers(~lon, ~lat, popup = ~text, clusterOptions = markerClusterOptions())
+    })
+    
+    # DataTable rendering
+    output$datatable <- DT::renderDataTable({
+      
+        if()
+        DT::datatable({
+          
+            data = weather_dl(station_ids = output$ui_numeric_inputs)
+            
+        }) # End of datatable
+      
+    }) # End of datatable rendering
     
 }
   

@@ -51,9 +51,12 @@ shinyUI(fluidPage(
                          
                 ), # End of Instruction tab
                 
+
                 tabPanel("Data Table",
                          br(),
-                         textOutput("name"),
+                         h3(textOutput("name")),
+                         br(),
+                         selectInput("Intervals", "Available Intervals", ""),
                          br(),
                          DT::dataTableOutput("datatable")
                 ) # End of Data Table tab

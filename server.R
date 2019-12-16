@@ -6,20 +6,9 @@ library(DT) # datatable()
 
 
 function(input, output, session) {
-    
-    # Interactive side-bar function
-    build_inputs <- function(choices) {
-        output = tagList()
-        for(i in 1:choices){
-          output[[i]] = tagList()
-          output[[i]][[1]] = numericInput(inputId =  paste0(i),
-                                          label =  paste0(i),
-                                          value = i)
-        }
-    return(output)
-    } # EOF build_inputs()
   
-    
+    # ----------- SideBar UI -----------
+  
     # Interactive side bar UI (Selection of ID Type, ID input)
     output$ui_selected <- renderUI({
         
@@ -36,25 +25,11 @@ function(input, output, session) {
           textInput("tc_id", label = h5("Enter Transport Canada ID"), value = "")
           
         }
-      
     }) # End of render for ui_selected
-      
-    # Interactive side bar UI (transfer numeric ID to input)
-    output$ui_numeric_inputs <- renderUI({
-      
-        if (input$main_selector == 'Climate ID' && 
-            (!is.null(input$climateid_submenu))) {
-          build_inputs(as.numeric(input$climateid_submenu))
-        } else if (input$main_selector == 'WMO ID' && 
-                   (!is.null(input$wmoid_submenu))){
-          build_inputs(as.numeric(input$wmoid_submenu))
-        } else if (input$main_selector == 'TC ID' && 
-                  (!is.null(input$tcid_submenu))){
-          build_inputs(as.numeric(input$tcid_submenu))
-        }
-      
-    }) # End of ui_numeric_inputs
+
     
+    
+    # ----------- For the Map -----------
     
     # Retrieve all station meta-data
     map_data_raw <- weathercan::stations_dl(verbose = FALSE, quiet = TRUE)
@@ -110,19 +85,109 @@ function(input, output, session) {
         leaflet() %>%
         addTiles() %>%
         addMarkers(~lon, ~lat, popup = ~text, clusterOptions = markerClusterOptions())
-    })
+    }) # End of Leaflet map rendering
     
+    
+    # ----------- For the Data Table -----------
+    
+    # Reactive
+    # convert Climate ID, WMO ID, or TC ID to Station ID
+    # Note, the typeof(id.entered) would be closure (much like a function)
+    #     therefore, make sure it's referred as "id.entered()" later on
+    id.entered <- reactive({
+      
+        # Which type of ID?
+        if (input$main_selector == 'Climate ID') {
+          
+            req(input$climate_id %in% station.tibble$climate_id, cancelOutput = TRUE)
+          
+            station.tibble %>% 
+                  filter(climate_id == input$climate_id) %>% 
+                  "$"(station_id) 
+          
+        } else if (input$main_selector == 'WMO ID'){
+          
+            req(input$wmo_id %in% station.tibble$WMO_id, cancelOutput = TRUE)
+            
+            station.tibble %>% 
+                filter(WMO_id == input$wmo_id) %>% 
+                "$"(station_id)
+          
+        } else if (input$main_selector == 'TC ID'){
+          
+            req(input$tc_id %in% station.tibble$TC_id, cancelOutput = TRUE)
+            
+            station.tibble %>% 
+                filter(TC_id == input$tc_id) %>% 
+                "$"(station_id)
+          
+        }
+      
+    }) # EOF id.entered()
+    
+    # Update dropdown menu, what time intervals are available
+    observe({
+        updateSelectInput(session, 
+                          "Intervals",
+                          choices = map_data_raw %>%
+                              drop_na(start) %>%
+                              filter(station_id == id.entered()) %>%
+                              select(interval) %>%
+                              unique(),
+                          selected = "month"
+        )
+    }) # end of observe
+
     # DataTable rendering
     output$datatable <- DT::renderDataTable({
       
-        if()
-        DT::datatable({
-          
-            data = weather_dl(station_ids = output$ui_numeric_inputs)
+      
+        # use the weathercan{} package function to retrieve data
+        weather_dl(station_ids = id.entered(),
+                   interval = as.character(input$Intervals)
+                   ) %>%
+        
+        DT::datatable(
             
-        }) # End of datatable
+            extensions = c('Buttons', 'FixedColumns', 'Scroller'),
+            options = list(
+              
+                # Options for extension "Buttons"
+                dom = 'Bfrtip',
+                
+                buttons = 
+                    list(I('colvis'), list(
+                      extend = 'collection',
+                      buttons = c('csv', 'excel', 'pdf'),
+                      text = 'Download Data'
+                    )),
+                
+                columnDefs = list(list(className = "dt-center", targets = "_all")),
+                
+                # Options for extension "FixedColumns"
+                scrollX = TRUE,
+                fixedColumns = TRUE,
+                
+                # Options for extension "Scroller"
+                deferRender = TRUE,
+                scrollY = 1000,
+                scroller = TRUE
+              
+            )
+          
+            
+        ) # End of datatable
       
     }) # End of datatable rendering
+    
+    # Station Name
+    output$name <- renderText({
+        printname <- station.tibble %>% filter(station_id == id.entered()) %>%
+          select(station_name)
+        printname[[1]]
+    })
+
+    
     
 }
   

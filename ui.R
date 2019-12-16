@@ -36,7 +36,10 @@ shinyUI(fluidPage(
                          print("Check Station Map to identify potential stations and retrieve their IDs"),
                          br(),
                          print("Check Data Page to download the data"),
-                         br(), br()
+                         br(),
+                         print("Data are downloaded on-the-fly from ECCC, please be patient"),
+                         br(), 
+                         br()
       
                 ), # End of Instruction tab
                 
@@ -57,6 +60,11 @@ shinyUI(fluidPage(
                          h3(textOutput("name")),
                          br(),
                          selectInput("Intervals", "Available Intervals", ""),
+                         br(),
+                         downloadButton("downloadData", "Download Selected Interval Data"),
+                         br(),
+                         br(),
+                         h4("Data Preview"),
                          br(),
                          DT::dataTableOutput("datatable")
                 ) # End of Data Table tab

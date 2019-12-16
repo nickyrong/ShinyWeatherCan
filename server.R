@@ -81,10 +81,17 @@ function(input, output, session) {
     
     # Leaflet map rendering
     output$MapPlot <- renderLeaflet({
-      map.data.plotting %>% 
-        leaflet() %>%
-        addTiles() %>%
-        addMarkers(~lon, ~lat, popup = ~text, clusterOptions = markerClusterOptions())
+        map.data.plotting %>% 
+        
+          # Some locations are wrong (impossible values)
+          drop_na(lon, lat) %>%
+          filter(between(lon, -142, -51), # East to west boundary of Canada
+                 between(lat, 41, 84) # South to north boundary of Canada
+          ) %>%
+          
+          leaflet() %>%
+          addTiles() %>%
+          addMarkers(~lon, ~lat, popup = ~text, clusterOptions = markerClusterOptions())
     }) # End of Leaflet map rendering
     
     
@@ -99,7 +106,10 @@ function(input, output, session) {
         # Which type of ID?
         if (input$main_selector == 'Climate ID') {
           
-            req(input$climate_id %in% station.tibble$climate_id, cancelOutput = TRUE)
+            validate(
+                need(input$climate_id %in% station.tibble$climate_id,
+                     "Station Not Found")
+            )
           
             station.tibble %>% 
                   filter(climate_id == input$climate_id) %>% 
@@ -107,7 +117,10 @@ function(input, output, session) {
           
         } else if (input$main_selector == 'WMO ID'){
           
-            req(input$wmo_id %in% station.tibble$WMO_id, cancelOutput = TRUE)
+            validate(
+              need(input$wmo_id %in% station.tibble$WMO_id,
+                   "Station Not Found")
+            )
             
             station.tibble %>% 
                 filter(WMO_id == input$wmo_id) %>% 
@@ -115,7 +128,10 @@ function(input, output, session) {
           
         } else if (input$main_selector == 'TC ID'){
           
-            req(input$tc_id %in% station.tibble$TC_id, cancelOutput = TRUE)
+            validate(
+              need(input$tc_id %in% station.tibble$TC_id,
+                   "Station Not Found")
+            )
             
             station.tibble %>% 
                 filter(TC_id == input$tc_id) %>% 
@@ -124,6 +140,14 @@ function(input, output, session) {
         }
       
     }) # EOF id.entered()
+    
+    
+    # Station Name
+    output$name <- renderText({
+        printname <- station.tibble %>% filter(station_id == id.entered()) %>%
+          select(station_name)
+        printname[[1]]
+    })
     
     # Update dropdown menu, what time intervals are available
     observe({
@@ -138,14 +162,33 @@ function(input, output, session) {
         )
     }) # end of observe
 
-    # DataTable rendering
-    output$datatable <- DT::renderDataTable({
-      
+    
+    # Station Dataset
+    dataSet <- reactive({
       
         # use the weathercan{} package function to retrieve data
         weather_dl(station_ids = id.entered(),
                    interval = as.character(input$Intervals)
-                   ) %>%
+        )
+    })
+    
+    # Download Data
+    output$downloadData <- downloadHandler(
+        filename = function() {
+          paste0("ID_", id.entered(), "_", 
+                 as.character(input$Intervals),
+                 ".csv", sep = "")
+        },
+        content = function(file) {
+          write.csv(dataSet(), file, row.names = FALSE)
+        }
+    )
+    
+    # DataTable rendering
+    output$datatable <- DT::renderDataTable({
+      
+      
+        dataSet() %>%
         
         DT::datatable(
             
@@ -155,12 +198,7 @@ function(input, output, session) {
                 # Options for extension "Buttons"
                 dom = 'Bfrtip',
                 
-                buttons = 
-                    list(I('colvis'), list(
-                      extend = 'collection',
-                      buttons = c('csv', 'excel', 'pdf'),
-                      text = 'Download Data'
-                    )),
+                buttons = list(I('colvis')),
                 
                 columnDefs = list(list(className = "dt-center", targets = "_all")),
                 
@@ -180,12 +218,6 @@ function(input, output, session) {
       
     }) # End of datatable rendering
     
-    # Station Name
-    output$name <- renderText({
-        printname <- station.tibble %>% filter(station_id == id.entered()) %>%
-          select(station_name)
-        printname[[1]]
-    })
 
     
     

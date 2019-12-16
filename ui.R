@@ -27,13 +27,15 @@ shinyUI(fluidPage(
             tabsetPanel(
               
                 tabPanel("Read Me",
-                         includeHTML("ReadMe.html")
+                         htmlOutput("ReadMe_HTML")
       
                 ), # End of Read Me tab
                 
                 tabPanel("Stations Map",
                          br(),
-                         h3("Database is still loading if map is not visible"),
+                         "Station info last updated: ", textOutput("info_date"),
+                         br(),
+                         actionButton("update_info", "Optional: Update Station Info from ECCC"),
                          br(),
                          leafletOutput("MapPlot"),
                          "Zoom into map to see station locations",

@@ -30,11 +30,49 @@ function(input, output, session) {
     }) # End of render for ui_selected
 
     
+    # ----------- For the ReadMe HTML -----------
+    # Directly using includeHTML in ui.R will break Shiny (stop execution of everything follows)
+    
+    output$ReadMe_HTML <- renderUI({
+    
+        includeHTML("ReadMe.html")
+      
+    })
+    
+    
     
     # ----------- For the Map -----------
     
     # Retrieve all station meta-data
-    map_data_raw <- weathercan::stations_dl(verbose = FALSE, quiet = TRUE)
+    current.csv.date <- paste0("station_meta_data.csv") %>% 
+                            file.info() %>%
+                            "$"(ctime) %>% 
+                            base::as.Date()
+    
+    output$info_date <- renderText({current.csv.date %>% as.character()})
+    
+    # Update meta-data list if there's no file or the file is older than 7 days
+    if(is.na(current.csv.date) || (Sys.Date() - current.csv.date) > 7) {
+      
+        station_meta_data <- weathercan::stations_dl(verbose = FALSE, quiet = TRUE)
+        station_meta_data %>% 
+            write.csv(file = paste0("station_meta_data.csv"), row.names = FALSE)
+        
+    } else {
+      
+        map_data_raw <- read.csv(paste0("station_meta_data.csv"))
+        
+    }
+    
+    observeEvent(input$update_info, {
+      
+        station_meta_data <- weathercan::stations_dl(verbose = FALSE, quiet = TRUE)
+        station_meta_data %>% 
+          write.csv(file = paste0("station_meta_data.csv"), row.names = FALSE)
+        map_data_raw <- read.csv(paste0("station_meta_data.csv"))
+        
+    })
+    
     
     # Data availability re-arrange
     record.range <- map_data_raw %>% 
@@ -146,10 +184,11 @@ function(input, output, session) {
     
     # Station Name
     output$name <- renderText({
-        printname <- station.tibble %>% 
-                        filter(station_id == id.entered()) %>%
-                        select(station_name)
-        printname[[1]]
+        station.tibble %>% 
+            filter(station_id == id.entered()) %>%
+            pull(station_name) %>%
+            as.character()
+        
     })
     
     # Update dropdown menu, what time intervals are available

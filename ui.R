@@ -60,6 +60,7 @@ shinyUI(fluidPage(
             ) # End of tab setting
             
         ) # End of main panel
+        
     ) # End of Page with Panel
     
 )) # End of Script

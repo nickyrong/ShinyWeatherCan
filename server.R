@@ -2,6 +2,8 @@ rm(list = ls())
 
 library(tidyverse) # we live in the tidyverse!
 library(weathercan) # download ECCC station info and data
+library(lutz) # additional package required by weathercan
+library(sf) # additional package required by weathercan
 library(DT) # datatable()
 
 
@@ -144,8 +146,9 @@ function(input, output, session) {
     
     # Station Name
     output$name <- renderText({
-        printname <- station.tibble %>% filter(station_id == id.entered()) %>%
-          select(station_name)
+        printname <- station.tibble %>% 
+                        filter(station_id == id.entered()) %>%
+                        select(station_name)
         printname[[1]]
     })
     
@@ -166,6 +169,11 @@ function(input, output, session) {
     # Station Dataset
     dataSet <- reactive({
       
+        validate(
+          need(input$Intervals %in% c("hour", "day", "month"),
+               "Interval Not Found")
+        )
+      
         # use the weathercan{} package function to retrieve data
         weather_dl(station_ids = id.entered(),
                    interval = as.character(input$Intervals)
@@ -183,6 +191,7 @@ function(input, output, session) {
           write.csv(dataSet(), file, row.names = FALSE)
         }
     )
+    
     
     # DataTable rendering
     output$datatable <- DT::renderDataTable({
@@ -208,7 +217,7 @@ function(input, output, session) {
                 
                 # Options for extension "Scroller"
                 deferRender = TRUE,
-                scrollY = 1000,
+                scrollY = 600,
                 scroller = TRUE
               
             )
@@ -224,8 +233,3 @@ function(input, output, session) {
 }
   
   
-
-
-#stn_id <- stations_dl(verbose = FALSE, quiet = TRUE) %>% filter(climate_id == 1100130)
-
-#weather_dl(station_ids = stn_id$station_id[1], interval = "day")

@@ -36,7 +36,7 @@ shinyUI(fluidPage(
                          "Station info last updated: ", textOutput("info_date"),
                          br(),
                          actionButton("update_info", "Optional: Update Station Info from ECCC"),
-                         br(),
+                         br(),br(),
                          leafletOutput("MapPlot"),
                          "Zoom into map to see station locations",
                          br(),
@@ -57,7 +57,19 @@ shinyUI(fluidPage(
                          h4("Data Preview"),
                          br(),
                          DT::dataTableOutput("datatable")
-                ) # End of Data Table tab
+                ), # End of Data Table tab
+                
+                tabPanel("Available Data",
+                         br(),
+                         "Note that these plots only show the % available for the period of record.",
+                         "This does not necessarily correspond to complete years of record.",
+                         "Therefore, these plots should only be used to understand the variables available at the station.",
+                         br(),
+                         selectInput("Annual", "Select", 
+                                     choices = list('Total', 'Annual')),
+                         br(),
+                         plotOutput("plot")
+                )
               
             ) # End of tab setting
             

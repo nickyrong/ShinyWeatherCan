@@ -5,6 +5,7 @@ library(weathercan) # download ECCC station info and data
 library(lutz) # additional package required by weathercan
 library(sf) # additional package required by weathercan
 library(DT) # datatable()
+library(naniar) # for summarizing available data
 
 
 function(input, output, session) {
@@ -266,8 +267,34 @@ function(input, output, session) {
       
     }) # End of datatable rendering
     
-
-    
+    # ----------- For the Available Data Summary -----------
+    output$plot <-renderPlot({
+      
+      # Station name for plot title
+      name <- station.tibble %>% 
+        filter(station_id == id.entered()) %>%
+        pull(station_name) %>%
+        as.character()
+      
+      # Remove non-climate variables (with the exception of year)
+      data <- dataSet() %>%
+        select(-station_operator, -WMO_id, -TC_id, -station_name,
+               -station_id, -prov, -month, -lon, -lat, -elev, -date,
+               -climate_id, -ends_with("flag"))
+      
+      # Plot either all record, or facet by year
+      if (input$Annual == "Annual"){
+        data %>%
+          gg_miss_var(show_pct = TRUE, facet = year) +
+            labs(title = name)
+        
+      } else {
+        data %>%
+          gg_miss_var(show_pct = TRUE) +
+            labs(title = name)
+      }
+        
+    }) # End of available data summary
     
 }
   

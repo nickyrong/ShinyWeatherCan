@@ -69,7 +69,7 @@ function(input, output, session) {
       
         station_meta_data <- weathercan::stations_dl(verbose = FALSE, quiet = TRUE)
         station_meta_data %>% 
-          write.csv(file = paste0("station_meta_data.csv"), row.names = FALSE)
+            write.csv(file = paste0("station_meta_data.csv"), row.names = FALSE)
         map_data_raw <- read.csv(paste0("station_meta_data.csv"))
         
     })
@@ -152,9 +152,9 @@ function(input, output, session) {
                      "Station Not Found")
             )
           
-            station.tibble %>% 
-                  filter(climate_id == input$climate_id) %>% 
-                  "$"(station_id) 
+            station.tibble %>% # Capitalized all station ID
+                  filter(toupper(climate_id) == toupper(input$climate_id)) %>% 
+                  "$"(station_id) %>% toupper() 
           
         } else if (input$main_selector == 'WMO ID'){
           
@@ -164,8 +164,8 @@ function(input, output, session) {
             )
             
             station.tibble %>% 
-                filter(WMO_id == input$wmo_id) %>% 
-                "$"(station_id)
+                filter(toupper(WMO_id) == toupper(input$wmo_id)) %>% 
+                "$"(station_id) %>% toupper() # Capitalized all station ID
           
         } else if (input$main_selector == 'TC ID'){
           
@@ -175,7 +175,7 @@ function(input, output, session) {
             )
             
             station.tibble %>% 
-                filter(TC_id == input$tc_id) %>% 
+                filter(toupper(TC_id) == toupper(input$tc_id)) %>% 
                 "$"(station_id)
           
         }
@@ -272,26 +272,26 @@ function(input, output, session) {
       
       # Station name for plot title
       name <- station.tibble %>% 
-        filter(station_id == id.entered()) %>%
-        pull(station_name) %>%
-        as.character()
+                  filter(station_id == id.entered()) %>%
+                  pull(station_name) %>%
+                  as.character()
       
       # Remove non-climate variables (with the exception of year)
       data <- dataSet() %>%
-        select(-station_operator, -WMO_id, -TC_id, -station_name,
-               -station_id, -prov, -month, -lon, -lat, -elev, -date,
-               -climate_id, -ends_with("flag"))
+                  select(-station_operator, -WMO_id, -TC_id, -station_name,
+                         -station_id, -prov, -month, -lon, -lat, -elev, -date,
+                         -climate_id, -ends_with("flag"))
       
       # Plot either all record, or facet by year
       if (input$Annual == "Annual"){
-        data %>%
-          gg_miss_var(show_pct = TRUE, facet = year) +
-            labs(title = name)
+          data %>%
+              gg_miss_var(show_pct = TRUE, facet = year) +
+                labs(title = name)
         
       } else {
-        data %>%
-          gg_miss_var(show_pct = TRUE) +
-            labs(title = name)
+          data %>%
+              gg_miss_var(show_pct = TRUE) +
+                labs(title = name)
       }
         
     }) # End of available data summary

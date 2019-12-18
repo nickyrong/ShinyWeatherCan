@@ -1,6 +1,9 @@
 
-<br/> Author: Nick Rong (Junior Scientist at Knight Piesold Consulting)
-<br/> Last Update 12/16/2019
+<br/> **Authors:** <br/> Nick Rong (Junior Scientist at *Knight Piesold
+Consulting*) <br/> Nate Smith (Senior Engineer at *Knight Piesold
+Consulting*) <br/><br/> Last Update 12/17/2019 <br/> Last Change:
+Updated ID enter to be case-insensitive; added data availability
+screening <br/>
 
 ### Overview
 

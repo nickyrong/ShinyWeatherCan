@@ -7,6 +7,8 @@ library(sf) # additional package required by weathercan
 library(DT) # datatable()
 library(naniar) # for summarizing available data
 
+# For servers
+#pacman::p_load(tidyverse, weathercan, lutz, sf, DT, naiar)
 
 function(input, output, session) {
   
@@ -148,29 +150,29 @@ function(input, output, session) {
         if (input$main_selector == 'Climate ID') {
           
             validate(
-                need(input$climate_id %in% station.tibble$climate_id,
+                need(toupper(input$climate_id) %in% toupper(station.tibble$climate_id),
                      "Station Not Found")
             )
           
             station.tibble %>% # Capitalized all station ID
                   filter(toupper(climate_id) == toupper(input$climate_id)) %>% 
-                  "$"(station_id) %>% toupper() 
+                  "$"(station_id)
           
         } else if (input$main_selector == 'WMO ID'){
           
             validate(
-              need(input$wmo_id %in% station.tibble$WMO_id,
+              need(toupper(input$wmo_id) %in% toupper(station.tibble$WMO_id),
                    "Station Not Found")
             )
             
             station.tibble %>% 
                 filter(toupper(WMO_id) == toupper(input$wmo_id)) %>% 
-                "$"(station_id) %>% toupper() # Capitalized all station ID
-          
+                "$"(station_id) 
+            
         } else if (input$main_selector == 'TC ID'){
           
             validate(
-              need(input$tc_id %in% station.tibble$TC_id,
+              need(toupper(input$tc_id) %in% toupper(station.tibble$TC_id),
                    "Station Not Found")
             )
             

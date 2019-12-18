@@ -5,9 +5,9 @@ account: nickrongkp
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1610014
-bundleId: 2678869
+bundleId: 2678903
 url: https://nickrongkp.shinyapps.io/ShinyWeatherCan/
-when: 1576690282.3666
+when: 1576691012.45401
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: README.md|ReadMe.Rmd

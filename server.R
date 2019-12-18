@@ -1,5 +1,14 @@
 rm(list = ls())
 
+
+# For servers
+#list of packages required
+#list.of.packages <- c("tidyverse", "weathercan", "lutz", "sf", "DT", "naniar")
+#checking missing packages from list
+#new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+#install missing ones
+#if(length(new.packages)) install.packages(new.packages, dependencies = TRUE)
+
 library(tidyverse) # we live in the tidyverse!
 library(weathercan) # download ECCC station info and data
 library(lutz) # additional package required by weathercan
@@ -7,8 +16,6 @@ library(sf) # additional package required by weathercan
 library(DT) # datatable()
 library(naniar) # for summarizing available data
 
-# For servers
-#pacman::p_load(tidyverse, weathercan, lutz, sf, DT, naiar)
 
 function(input, output, session) {
   

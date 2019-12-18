@@ -68,6 +68,8 @@ function(input, output, session) {
         station_meta_data %>% 
             write.csv(file = paste0("station_meta_data.csv"), row.names = FALSE)
         
+        map_data_raw <- read.csv(paste0("station_meta_data.csv"))
+        
     } else {
       
         map_data_raw <- read.csv(paste0("station_meta_data.csv"))

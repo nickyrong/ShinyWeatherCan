@@ -1,5 +1,16 @@
 
-<br/> **Authors:** <br/> Nick Rong (Junior Scientist at *Knight Piesold
+<br/>
+
+<script>
+   $(document).ready(function() {
+     $head = $('#header');
+     $head.prepend('<img src=\"https://www.knightpiesold.com/en/includes/themes/kpCustom/images/KP-logo.png\" style=\"float: right;width: 180px;\"/>')
+   });
+</script>
+
+<br/>
+
+**Authors:** <br/> Nick Rong (Junior Scientist at *Knight Piesold
 Consulting*) <br/> Nate Smith (Senior Engineer at *Knight Piesold
 Consulting*) <br/><br/> Last Update 12/17/2019 <br/> Last Change:
 Updated ID enter to be case-insensitive; added data availability
@@ -19,8 +30,9 @@ visualization and analysis. <br/>
 
 Functionality in this ShinyApp is provided by [weathercan
 package](https://github.com/ropensci/weathercan). This R package is
-developed and maintained by the Provincial Government of British
-Columbia. <br/>
+developed and maintained by members of the rOpenSci (main contributors
+include Dr. Steffi LaZerte and Sam Albers, Data Scientist in BC
+Goverment’s Data Science & Analytics Unit) <br/>
 <img src="https://github.com/ropensci/weathercan/raw/master/inst/assets/weathercan_logo.png" width="10%" />
 <br/>
 
@@ -41,11 +53,8 @@ the data as `.csv` for further processing and analysis. <br/>
 
 ### Future updates
 
-`weathercan{}` has built-in interpolation functions to estimate weather
-in between stations. It has not been realized in this ShinyApp but is on
-Nick’s to-do list.
-
-Plotting will be included in the future updates. <br/>
+Data visualization & screening will be included in the future updates.
+<br/>
 
 ### Feedback & Suggestions
 

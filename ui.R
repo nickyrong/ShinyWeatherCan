@@ -59,9 +59,9 @@ shinyUI(fluidPage(
                          DT::dataTableOutput("datatable")
                 ), # End of Data Table tab
                 
-                tabPanel("Available Data",
+                tabPanel("Missing Data",
                          br(),
-                         "Note that these plots only show the % available for the period of record.",
+                         "Note that these plots only show the % missing for the period of record.",
                          "This does not necessarily correspond to complete years of record.",
                          "Therefore, these plots should only be used to understand the variables available at the station.",
                          br(),

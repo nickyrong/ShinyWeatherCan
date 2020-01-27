@@ -278,7 +278,7 @@ function(input, output, session) {
       
     }) # End of datatable rendering
     
-    # ----------- For the Available Data Summary -----------
+    # ----------- For the Missing Data Summary -----------
     output$plot <-renderPlot({
       
       # Station name for plot title

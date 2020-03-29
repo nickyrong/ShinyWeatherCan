@@ -1,6 +1,7 @@
 rm(list=ls())
 library(shiny)
 library(leaflet)
+library(plotly)
 
 
 shinyUI(fluidPage(
@@ -64,11 +65,11 @@ shinyUI(fluidPage(
                          "Note that these plots only show the % missing for the period of record.",
                          "This does not necessarily correspond to complete years of record.",
                          "Therefore, these plots should only be used to understand the variables available at the station.",
-                         br(),
+                         br(), br(),
                          selectInput("Annual", "Select",
                                      choices = list('Total', 'Annual')),
                          br(),
-                         plotOutput("plot")
+                         plotlyOutput("plot")
                 )
 
             ) # End of tab setting

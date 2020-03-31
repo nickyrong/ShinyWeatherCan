@@ -1,0 +1,12 @@
+name: WeatherCan
+title: WeatherCan
+username:
+account: nickrongkp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1605292
+bundleId: 2947342
+url: https://nickrongkp.shinyapps.io/WeatherCan/
+when: 1585631010.4879
+asMultiple: FALSE
+asStatic: FALSE

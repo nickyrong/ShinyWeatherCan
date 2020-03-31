@@ -3,7 +3,7 @@ rm(list = ls())
 
 # For servers
 #list of packages required
-#list.of.packages <- c("tidyverse", "weathercan", "lutz", "sf", "DT", "naniar")
+#list.of.packages <- c("tidyverse", "weathercan", "lutz", "sf", "DT", "naniar", "plotly")
 #checking missing packages from list
 #new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 #install missing ones
@@ -15,6 +15,7 @@ library(lutz) # additional package required by weathercan
 library(sf) # additional package required by weathercan
 library(DT) # datatable()
 library(naniar) # for summarizing available data
+library(plotly) # interactive available data plotting
 
 
 function(input, output, session) {
@@ -125,9 +126,9 @@ function(input, output, session) {
         mutate(text = paste(sep = "<br/>", paste("<b>", station_name, "</b>"), 
                             paste0("Climate ID : ", climate_id),
                             paste0("Elevation (m) : ", elev),
-                            paste0("Hourly Record: from ", H_start, " to ", H_end, " (", H_end-H_start, " Yrs)"),
-                            paste0("Daily Record: from ", D_start, " to ", D_end, " (", D_end-D_start, " Yrs)"),
-                            paste0("Monthly Record: from ", M_start, " to ", M_end, " (", M_end-M_start, " Yrs)")
+                            paste0("Hourly Record: ", H_start, " to ", H_end, " (", H_end-H_start, " Yrs)"),
+                            paste0("Daily Record: ", D_start, " to ", D_end, " (", D_end-D_start, " Yrs)"),
+                            paste0("Monthly Record: ", M_start, " to ", M_end, " (", M_end-M_start, " Yrs)")
                             
         ))
     
@@ -279,7 +280,7 @@ function(input, output, session) {
     }) # End of datatable rendering
     
     # ----------- For the Missing Data Summary -----------
-    output$plot <-renderPlot({
+    output$plot <-renderPlotly({
       
       # Station name for plot title
       name <- station.tibble %>% 
@@ -293,16 +294,23 @@ function(input, output, session) {
                          -station_id, -prov, -month, -lon, -lat, -elev, -date,
                          -climate_id, -ends_with("flag"))
       
-      # Plot either all record, or facet by year
+      # Plot either full record, or facet by year
       if (input$Annual == "Annual"){
-          data %>%
+          test = data %>%
               gg_miss_var(show_pct = TRUE, facet = year) +
-                labs(title = name)
+                labs(title = name) + 
+                theme(axis.title.y = element_blank())
+          
+          ggplotly(test)
         
       } else {
-          data %>%
+          test = data %>% select(-year) %>%
               gg_miss_var(show_pct = TRUE) +
-                labs(title = name)
+                labs(title = name) + 
+                theme(axis.title.y = element_blank())
+          
+          ggplotly(test)
+          
       }
         
     }) # End of available data summary

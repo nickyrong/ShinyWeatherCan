@@ -35,6 +35,8 @@ include_graphics("https://github.com/ropensci/weathercan/raw/master/inst/assets/
 
 ### Usage:
 
+Currently the app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of others and close the app/browser tab as soon as possible when you are done to conserve resources for others, thank you.
+
 **Data are downloaded on-the-fly from ECCC. Please be patient as the downloads can be fairly large (especially for hourly and daily data).**
 
 Check the Station Map to identify potential stations and their IDs. If the map is not visible, it is still being loaded.

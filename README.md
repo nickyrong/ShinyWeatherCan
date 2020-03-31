@@ -1,3 +1,12 @@
+---
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+
+<br/>
+
 **Authors:** <br/>
 Nick Rong ([nickyrong](https://github.com/nickyrong)) <br/>
 Nate Smith ([WraySmith](https://github.com/WraySmith)) <br/><br/>
@@ -20,6 +29,8 @@ Functionality in this ShinyApp is provided by [weathercan package](https://githu
 
 
 ### Usage:
+
+Currently the app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of others and close the app/browser tab as soon as possible when you are done to conserve resources for others, thank you.
 
 **Data are downloaded on-the-fly from ECCC. Please be patient as the downloads can be fairly large (especially for hourly and daily data).**
 

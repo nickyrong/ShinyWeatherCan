@@ -46,7 +46,7 @@ function(input, output, session) {
     
     output$ReadMe_HTML <- renderUI({
     
-        includeHTML("ReadMe.html")
+        includeHTML("Intro_tab.html")
       
     })
     

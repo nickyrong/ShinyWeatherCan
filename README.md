@@ -25,7 +25,7 @@ Currently the app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/We
 
 **Data are downloaded on-the-fly from ECCC. Please be patient as the downloads can be fairly large (especially for hourly and daily data).**
 
-Check the Station Map to identify potential stations and their Climate IDs. Enter the Climate ID for targeted station on the sidebar. Alternative, WMO or TC IDs can be used if they are known to users.
+Check the Station Map to identify potential stations and their Climate IDs. Enter the Climate ID for targeted station on the sidebar. Alternatively, WMO or TC IDs can be used if they are known to users.
 
 The `Data Table` tab presents a preview of data. Users may download the data as a .csv/.xls/.pdf file for further processing and analysis.
 

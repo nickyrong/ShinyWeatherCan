@@ -14,8 +14,10 @@ library(plotly) # interactive available data plotting
 function(input, output, session) {
   
   # Here set up any elements that require spinner
+  spin_map <- Waiter$new("MapPlot", html = spin_3k(), color = "black")
   spin_datatable <- Waiter$new("datatable", html = spin_3k(), color = "black")
-  waitress_btn <- Waitress$new("#update_meta", theme = "overlay", infinite = TRUE)
+  spin_plot <- Waiter$new("pctmiss_plotly", html = spin_3k(), color = "black")
+  
 
   # SideBar UI-------------------------------
   
@@ -33,15 +35,15 @@ function(input, output, session) {
       
       # Station Climate ID Selection by User
       updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$climate_id,
-                        selected = NULL
+                        choices = station_meta()$climate_id[!is.na(station_meta()$climate_id)],
+                        selected = "1168520"
       )
       
     } else if (input$main_selector == 'WMO ID'){
       
       # Station WMO ID Selection by User
       updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$WMO_id,
+                        choices = station_meta()$WMO_id[!is.na(station_meta()$WMO_id)],
                         selected = NULL
       )
       
@@ -50,7 +52,7 @@ function(input, output, session) {
       
       # Station TC ID Selection by User
       updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$TC_id,
+                        choices = station_meta()$TC_id[!is.na(station_meta()$TC_id)],
                         selected = NULL
       )
       
@@ -115,19 +117,19 @@ function(input, output, session) {
     
     if(!is.na(M) & !is.na(D) & !is.na(H)){
       validate(need(
-        (M>=D) & (M>=H), "CAUTION: monthly data on ECCC have a shorter record length than daily/hourly"
+        (M>=D) & (M>=H), "CAUTION: ECCC monthly data for this station are shorter than daily/hourly"
       ))
     } else if(!is.na(M) & !is.na(D)){
       validate(need(
-        (M>=D), "CAUTION: monthly data on ECCC have a shorter record length than daily"
+        (M>=D), "CAUTION: ECCC monthly data for this station are shorter than daily"
       ))
     } else if(!is.na(M) & !is.na(H)){
       validate(need(
-        (M>=H), "CAUTION: monthly data on ECCC have a shorter record length than hourly"
+        (M>=H), "CAUTION: ECCC monthly data for this station are shorter than hourly"
       ))
     } else if(!is.na(D) & !is.na(H)){
       validate(need(
-        (D>=H), "CAUTION: daily data on ECCC have a shorter record length than hourly"
+        (D>=H), "CAUTION: ECCC daily data for this station are shorter than hourly"
       ))
     }  
     
@@ -135,6 +137,23 @@ function(input, output, session) {
     "" # otherwise return empty message
     
   })
+  
+  
+  # ReadMe Tab --------------------------------
+  # using HTML will mess up CSS style/theme format for some reasons, use Markdown
+  
+  output$README <- renderUI({
+    
+    # When run locally, README is in parent folder (for github/gitlab)
+    if(file.exists("../README.md")) {
+      includeMarkdown("../README.md")
+    } else {
+      # when deployed, README is copied to the same deployment folder
+      includeMarkdown("./README.md")
+    }
+    
+  })
+  
   
   # Station Map ------------------------------
   
@@ -157,11 +176,18 @@ function(input, output, session) {
 
   # When button is click, re-download the meta data
   observeEvent(input$update_meta, {
-    
-    # weathercan::stations_dl(verbose = FALSE, quiet = TRUE) %>%
-    #   station_meta_data %>% 
-    #   write.csv(file = "station_meta_data.csv", row.names = FALSE)
 
+      spin_map$show() #show spinner
+    
+      #takes quite long...like >10 seconds
+      weathercan::stations_dl(verbose = FALSE, quiet = TRUE) %>%
+           write.csv(file = "station_meta_data.csv", row.names = FALSE)
+    
+      # For testing only!
+      # Sys.sleep(5)
+      # station_meta() %>% 
+      #   write.csv(file = "station_meta_data.csv", row.names = FALSE)
+    
 
   })
   
@@ -170,6 +196,10 @@ function(input, output, session) {
   # Data frame required for the map plotting
   map_plot_data <- reactive({
     
+    # exit required for map type rendering (need to be placed in upstream reactive)
+    on.exit({
+      spin_map$hide()
+    })
     
     # 1. Data availability re-arrange
     record_range <- station_meta() %>% 
@@ -228,6 +258,7 @@ function(input, output, session) {
   # Leaflet map rendering
   output$MapPlot <- renderLeaflet({
     
+    
     map_plot_data() %>%
       
       # Some locations are wrong (impossible values)
@@ -268,7 +299,7 @@ function(input, output, session) {
   
   
   # Station Dataset
-  dataSet <- reactive({
+  dataSet_table <- reactive({
     
     validate(
       need(input$Intervals %in% c("hour", "day", "month"),
@@ -283,25 +314,14 @@ function(input, output, session) {
     
   })
   
-  # Download Data
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      paste0("ID_", id_entered(), "_", 
-             as.character(input$Intervals),
-             ".csv", sep = "")
-    },
-    content = function(file) {
-      write.csv(dataSet(), file, row.names = FALSE)
-    }
-  )
-  
+
   file_dl_name <- reactive({
     
     ID_TYPE <- input$main_selector %>% as.character()
     ID <- input$stn_id_input %>% as.character()
     INTERVAL <- input$Intervals %>% as.character()
     
-    paste(ID_TYPE, ID, INTERVAL, sep = "_")
+    paste(ID_TYPE, ID, INTERVAL, sep = " ")
     
   })
   
@@ -310,7 +330,7 @@ function(input, output, session) {
     
     spin_datatable$show() #show spinner
     
-    dataSet() %>%
+    dataSet_table() %>%
       
       DT::datatable(
         
@@ -354,41 +374,119 @@ function(input, output, session) {
   
   # Missing Data Exploring ------------------------------
   
-  
-  output$miss_plotly <- renderPlotly({
-  
-    validate(need())
+  # Update dropdown menu, what time intervals are available
+  observe({
     
-    VAR_COLS <- test %>% select(year,
-                                # only keep variable columns
-                                cool_deg_days:total_snow, 
-                                # remove any flag columns
-                                -ends_with("flag")
+    validate(
+      need(input$stn_id_input, "Invalid Station ID"))
+    
+    updateSelectInput(session, 
+                      "Intervals_pctmiss",
+                      choices = station_meta() %>%
+                        drop_na(start) %>%
+                        filter(station_id == id_entered()) %>%
+                        select(interval) %>%
+                        unique(),
+                      selected = "month"
     )
+  }) # end of observe
+  
+  # Station Dataset
+  dataSet_plot <- reactive({
+    
+    
+    
+    validate(
+      need(input$Intervals_pctmiss %in% c("hour", "day", "month"),
+           "Interval Not Found")
+    )
+    
+    spin_plot$show() #show spinner
+    # needed an exit for plotly type rendering
+    on.exit({
+      spin_plot$hide()
+    })
+    
+    # use the weathercan{} package function to retrieve data
+    weathercan::weather_dl(station_ids = id_entered(),
+                           interval = as.character(input$Intervals_pctmiss),
+                           quiet = TRUE
+    )
+    
+
+    
+  })
+  
+  output$pctmiss_plotly <- renderPlotly({
+    
+    
+    validate(
+      need(input$stn_id_input, "Invalid Station ID"))
+    
+    validate(
+      need(input$Intervals_pctmiss %in% c("hour", "day", "month"),
+           "Interval Not Found")
+    )
+    
+    validate(
+      need(dim(dataSet_plot())[1]>1, "No data available for plotting")
+    )
+    
+    # available columns are different depends on intervals
+    if(input$Intervals_pctmiss == "day"){
+      
+      VAR_COLS <- dataSet_plot() %>% 
+                      select(year,
+                          # only keep variable columns
+                          cool_deg_days:total_snow, 
+                          # remove any flag columns
+                          -ends_with("flag")
+                      )
+                                
+    } else if(input$Intervals_pctmiss == "month") {
+      
+      VAR_COLS <- dataSet_plot() %>% 
+                      select(year,
+                             # only keep variable columns
+                             dir_max_gust:total_snow, 
+                             # remove any flag columns
+                             -ends_with("flag")
+                      )
+      
+    } else if(input$Intervals_pctmiss == "hour") {
+      
+      VAR_COLS <- dataSet_plot() %>% 
+                      select(year,
+                             # only keep variable columns
+                             weather:wind_spd, 
+                             # remove any flag columns
+                             -ends_with("flag")
+                      )
+    }
     
     TICK_FULL <- unique(VAR_COLS$year)
     
     # try to maintain no more than 15 labels
     if(length(TICK_FULL)>80){
       #only label every 10 years
-      TICK_REDUCED <- ifelse(as.numeric(FULL) %% 10 == 0, TICK_FULL, "")
-    } else if (length(TICK_FULL<30)){
+      TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 10 == 0, TICK_FULL, "")
+    } else if (length(TICK_FULL)<30){
       #only label every 2 years
-      TICK_REDUCED <- ifelse(as.numeric(FULL) %% 2 == 0, TICK_FULL, "")
+      TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 2 == 0, TICK_FULL, "")
     } else {
       #only label every 5 years
-      TICK_REDUCED <- ifelse(as.numeric(FULL) %% 5 == 0, TICK_FULL, "")
+      TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 5 == 0, TICK_FULL, "")
     }
     
     
     miss_plot <- gg_miss_fct(VAR_COLS, year) + 
-      labs(title = "Data Missing") +
+      labs(title = paste("Completeness report for", file_dl_name())) +
       scale_x_discrete(limits = TICK_FULL, 
                        breaks = TICK_FULL, 
                        labels = TICK_REDUCED)
     
     ggplotly(miss_plot)
-  
+    
   })
   # End the app loading spinner----
   waiter_hide()

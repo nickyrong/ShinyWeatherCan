@@ -62,7 +62,7 @@ shinyUI(fluidPage(
       tabsetPanel(
         
         tabPanel("Read Me",
-                 htmlOutput("ReadMe_HTML")
+                 htmlOutput("README") #it is technically a markdown render but HTML works
                  
         ), # End of Read Me tab
         
@@ -72,7 +72,7 @@ shinyUI(fluidPage(
                  br(),
                  actionButton("update_meta", "Update Station Map from ECCC (~ 20 secs)"),
                  br(),br(),
-                 leafletOutput("MapPlot", height = 800),
+                 leafletOutput("MapPlot", height = 600),
                  "Zoom into map to see station locations",
                  br(),
                  "Click on a location to see station info."
@@ -94,16 +94,16 @@ shinyUI(fluidPage(
                  br()
         ), # End of Data Table tab
         
-        tabPanel("Missing Data",
+        tabPanel("Data Completeness",
                  br(),
-                 "Note that these plots only show the % missing for the period of record.",
-                 "This does not necessarily correspond to complete years of record.",
-                 "Therefore, these plots should only be used to understand the variables available at the station.",
-                 br(), br(),
-                 selectInput("Annual", "Select",
-                             choices = list('Total', 'Annual')),
+                 h4("Select Available Intervals"),
+                 selectInput("Intervals_pctmiss", "", ""),
                  br(),
-                 plotlyOutput("plot")
+                 code("Please wait for data to be downloaded from ECCC,
+                       preview plot will appear below once download complete."),
+                 br(),br(),
+                 plotlyOutput("pctmiss_plotly"),
+                 br()
         )
         
       ) # End of tab setting

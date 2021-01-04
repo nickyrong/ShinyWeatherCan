@@ -480,7 +480,11 @@ function(input, output, session) {
     
     
     miss_plot <- gg_miss_fct(VAR_COLS, year) + 
-      labs(title = paste("Completeness report for", file_dl_name())) +
+      labs(title = paste("Completeness report for", 
+                         input$main_selector,
+                         input$stn_id_input,
+                         input$Intervals_pctmiss,
+                         "data")) +
       scale_x_discrete(limits = TICK_FULL, 
                        breaks = TICK_FULL, 
                        labels = TICK_REDUCED)

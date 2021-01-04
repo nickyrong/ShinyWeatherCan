@@ -47,7 +47,7 @@ limitations under the License.
 
 ## Contributing
 
-Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/nickyrong/ShinyCFA/issues).
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/nickyrong/ShinyWeatherCan/issues).
 
 Please note that this project was created under a learning objective and it is provided in the event it is useful to others. Accordingly, it is not necessarily under active development. 
 <br/>

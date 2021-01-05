@@ -80,7 +80,7 @@ shinyUI(fluidPage(
         
         tabPanel("Data Table",
                  br(),
-                 h4("Select Available Intervals"),
+                 h4("Select Available Interval"),
                  selectInput("Intervals", "", ""),
                  br(),
                  code("Please wait for data to be downloaded from ECCC,
@@ -94,7 +94,7 @@ shinyUI(fluidPage(
         
         tabPanel("Data Completeness",
                  br(),
-                 h4("Select Available Intervals"),
+                 h4("Select Available Interval"),
                  selectInput("Intervals_pctmiss", "", ""),
                  br(),
                  code("Please wait for data to be downloaded from ECCC,

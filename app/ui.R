@@ -11,9 +11,7 @@ shinyUI(fluidPage(
   use_waiter(),
   waiter_show_on_load(html = spin_3k(), color = "black"), # place at the top before content
   
-  
   theme = shinytheme("yeti"),
-  tags$head(HTML("<title>'Environment Canada Climate Data Retrieval Tool'</title>")),
   
   # Change font color of error message to red
   tags$head(
@@ -47,7 +45,7 @@ shinyUI(fluidPage(
       selectizeInput("stn_id_input", label = h3("Enter Station ID"),
                      choices = c("Loading..."),
                      multiple= FALSE,
-                     options = list(maxOptions = 5)),
+                     options = list(maxOptions = 10)),
 
       h3("Station Info"),
       h6(htmlOutput("stn_input_info")),

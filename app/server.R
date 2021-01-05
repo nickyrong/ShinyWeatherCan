@@ -1,11 +1,9 @@
 rm(list = ls())
 
-library(tidyr) # we live in the tidyverse!
+library(tidyr)
 library(renv)
 library(dplyr)
 library(weathercan) # download ECCC station info and data
-library(lutz) # additional package required by weathercan
-library(sf) # additional package required by weathercan
 library(DT) # datatable()
 library(naniar) # for summarizing available data
 library(plotly) # interactive available data plotting
@@ -36,7 +34,7 @@ function(input, output, session) {
       # Station Climate ID Selection by User
       updateSelectInput(session, 'stn_id_input',
                         choices = station_meta()$climate_id[!is.na(station_meta()$climate_id)],
-                        selected = "1168520"
+                        selected = "1047672"
       )
       
     } else if (input$main_selector == 'WMO ID'){

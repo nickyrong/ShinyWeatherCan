@@ -18,7 +18,7 @@ shinyUI(fluidPage(
     tags$style(HTML("
       .shiny-output-error-validation {
         color: red;
-        font-weight: bold;
+
       }
     "))
   ),
@@ -37,19 +37,26 @@ shinyUI(fluidPage(
     # Sidebar panel
     sidebarPanel(
       width = 3,
-      radioButtons(inputId = "main_selector",
-                   label = h3('Select ID Type'),
+      selectInput(inputId = "main_selector",
+                   label = h4('Select ID Type'),
                    choices = list('Climate ID', 'WMO ID', 'TC ID'),
                    selected = 'Climate ID'),
+    
       
-      selectizeInput("stn_id_input", label = h3("Enter Station ID"),
+      selectizeInput("stn_id_input", label = h4("Enter Station ID"),
                      choices = c("Loading..."),
                      multiple= FALSE,
                      options = list(maxOptions = 10)),
 
-      h3("Station Info"),
+      h4("Station Info"),
       h6(htmlOutput("stn_input_info")),
-      h5(htmlOutput("stn_warning"))
+      h6(htmlOutput("stn_warning")),
+      
+      #h4("Data Retrieval"),
+      selectInput("Intervals", h4("Data Retrieval"), ""),
+      actionButton("access_data", "Get Data from ECCC"),
+      h6("When Data Table loads, all data are accessed")
+      
     ), # end of side bar panel
     
     
@@ -80,9 +87,6 @@ shinyUI(fluidPage(
         
         tabPanel("Data Table",
                  br(),
-                 h4("Select Available Interval"),
-                 selectInput("Intervals", "", ""),
-                 br(),
                  code("Please wait for data to be downloaded from ECCC,
                        preview table & download options will appear below once download complete."),
                  br(),br(),
@@ -94,13 +98,10 @@ shinyUI(fluidPage(
         
         tabPanel("Data Completeness",
                  br(),
-                 h4("Select Available Interval"),
-                 selectInput("Intervals_pctmiss", "", ""),
-                 br(),
                  code("Please wait for data to be downloaded from ECCC,
-                       preview plot will appear below once download complete."),
+                       plot will appear below once download complete."),
                  br(),br(),
-                 plotlyOutput("pctmiss_plotly"),
+                 plotOutput("pctmiss_plotly"),
                  br()
         )
         

@@ -370,32 +370,18 @@ function(input, output, session) {
   }) # End of datatable rendering
   
   
-  # Missing Data Exploring ------------------------------
+  # Missing Data Explorer ------------------------------
   
   # Update dropdown menu, what time intervals are available
-  observe({
-    
-    validate(
-      need(input$stn_id_input, "Invalid Station ID"))
-    
-    updateSelectInput(session, 
-                      "Intervals_pctmiss",
-                      choices = station_meta() %>%
-                        drop_na(start) %>%
-                        filter(station_id == id_entered()) %>%
-                        select(interval) %>%
-                        unique(),
-                      selected = "month"
-    )
-  }) # end of observe
   
   # Station Dataset
   dataSet_plot <- reactive({
     
-    
+    validate(
+      need(input$stn_id_input, "Invalid Station ID"))
     
     validate(
-      need(input$Intervals_pctmiss %in% c("hour", "day", "month"),
+      need(input$Intervals %in% c("hour", "day", "month"),
            "Interval Not Found")
     )
     
@@ -407,7 +393,7 @@ function(input, output, session) {
     
     # use the weathercan{} package function to retrieve data
     weathercan::weather_dl(station_ids = id_entered(),
-                           interval = as.character(input$Intervals_pctmiss),
+                           interval = as.character(input$Intervals),
                            quiet = TRUE
     )
     
@@ -415,14 +401,14 @@ function(input, output, session) {
     
   })
   
-  output$pctmiss_plotly <- renderPlotly({
+  output$pctmiss_plotly <- renderPlot({
     
     
     validate(
       need(input$stn_id_input, "Invalid Station ID"))
     
     validate(
-      need(input$Intervals_pctmiss %in% c("hour", "day", "month"),
+      need(input$Intervals %in% c("hour", "day", "month"),
            "Interval Not Found")
     )
     
@@ -431,7 +417,7 @@ function(input, output, session) {
     )
     
     # available columns are different depends on intervals
-    if(input$Intervals_pctmiss == "day"){
+    if(input$Intervals == "day"){
       
       VAR_COLS <- dataSet_plot() %>% 
                       select(year,
@@ -441,7 +427,7 @@ function(input, output, session) {
                           -ends_with("flag")
                       )
                                 
-    } else if(input$Intervals_pctmiss == "month") {
+    } else if(input$Intervals == "month") {
       
       VAR_COLS <- dataSet_plot() %>% 
                       select(year,
@@ -451,7 +437,7 @@ function(input, output, session) {
                              -ends_with("flag")
                       )
       
-    } else if(input$Intervals_pctmiss == "hour") {
+    } else if(input$Intervals == "hour") {
       
       VAR_COLS <- dataSet_plot() %>% 
                       select(year,
@@ -481,13 +467,13 @@ function(input, output, session) {
       labs(title = paste("Completeness report for", 
                          input$main_selector,
                          input$stn_id_input,
-                         input$Intervals_pctmiss,
+                         input$Intervals,
                          "data")) +
       scale_x_discrete(limits = TICK_FULL, 
                        breaks = TICK_FULL, 
                        labels = TICK_REDUCED)
     
-    ggplotly(miss_plot)
+    miss_plot
     
   })
   # End the app loading spinner----

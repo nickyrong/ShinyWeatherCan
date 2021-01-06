@@ -401,7 +401,7 @@ function(input, output, session) {
     
   })
   
-  output$pctmiss_plotly <- renderPlot({
+  output$pctmiss_plotly <- renderPlotly({
     
     
     validate(
@@ -473,7 +473,7 @@ function(input, output, session) {
                        breaks = TICK_FULL, 
                        labels = TICK_REDUCED)
     
-    miss_plot
+    ggplotly(miss_plot)
     
   })
   # End the app loading spinner----

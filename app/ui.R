@@ -101,7 +101,7 @@ shinyUI(fluidPage(
                  code("Please wait for data to be downloaded from ECCC,
                        plot will appear below once download complete."),
                  br(),br(),
-                 plotOutput("pctmiss_plotly"),
+                 plotlyOutput("pctmiss_plotly"),
                  br()
         )
         

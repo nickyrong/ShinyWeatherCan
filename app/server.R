@@ -16,14 +16,14 @@ function(input, output, session) {
   spin_datatable <- Waiter$new("datatable", html = spin_3k(), color = "black")
   spin_plot <- Waiter$new("pctmiss_plotly", html = spin_3k(), color = "black")
   
-
+  
   # SideBar UI-------------------------------
   
   # Load Archived Station Data (new download takes about 15 seconds)
   station_meta <- reactiveFileReader(intervalMillis = 1000, 
                                      session,
-                                     filePath = "station_meta_data.csv", 
-                                     readFunc = read.csv
+                                     filePath = "station_meta_data.rds", 
+                                     readFunc = readRDS
                                      )
   
   # observe main selector to decide which one to update
@@ -90,6 +90,23 @@ function(input, output, session) {
   }) # End of translating the 3 IDs to station_id
   
   
+  # Update dropdown menu, what time intervals are available
+  observe({
+    
+    validate(
+      need(input$stn_id_input, "Invalid Station ID"))
+    
+    updateSelectInput(session, 
+                      "Intervals",
+                      choices = station_meta() %>%
+                        drop_na(start) %>%
+                        filter(station_id == id_entered()) %>%
+                        select(interval) %>%
+                        unique(),
+                      selected = "month"
+    )
+  }) # end of observe
+  
   output$stn_input_info <- renderText({
     
     validate(
@@ -137,6 +154,28 @@ function(input, output, session) {
   })
   
   
+  
+  # ECCC data access pop-up message
+  observeEvent(input$access_data, {
+    
+    validate(
+      need(input$stn_id_input, "Invalid Station ID"))
+    
+    # Show a modal when the button is pressed
+    shinyalert(
+      title = "Downloading Data from ECCC", 
+      text = paste0("Please be patient with the download. \n
+                     Download is complete when Data Table & Completeness Figure are re-loaded."),
+      type = "warning",
+      showCancelButton = FALSE,
+      animation = "slide-from-bottom"
+
+    )
+  }) # end of shinyalert observeEvent button
+  
+
+  
+  
   # ReadMe Tab --------------------------------
   # using HTML will mess up CSS style/theme format for some reasons, use Markdown
   
@@ -156,38 +195,73 @@ function(input, output, session) {
   # Station Map ------------------------------
   
   # Retrieve all station meta-data (auto-update if file changed, checked every sec)
-  current_csv_date <- reactivePoll(1000, session,
+  current_rds_date <- reactivePoll(1000, session,
                          # This function returns the time that the file was last modified
                          checkFunc = function() {
-                             file.info("station_meta_data.csv")$mtime[1]
+                             file.info("station_meta_data.rds")$mtime[1]
                          },
                          # This function returns the meta info of the file
                          valueFunc = function() {
-                              file.info("station_meta_data.csv")$mtime[1] %>% 
+                              file.info("station_meta_data.rds")$mtime[1] %>% 
                                 base::as.Date(tz = "America/Vancouver")
                          }
                        )
   
 
   # print out station meta data file last modified
-  output$info_date <- renderText({current_csv_date() %>% as.character()})
+  output$info_date <- renderText({current_rds_date() %>% as.character()})
 
-  # When button is click, re-download the meta data
+  # When button is click, check if it is outldated, if yes then re-download the meta data
   observeEvent(input$update_meta, {
+  
+    # check how old is the file
+    how_old <- base::difftime(Sys.Date(),
+                              current_rds_date(),
+                              units = "days") %>% as.numeric()
+    
+    #only update if meta database is more than 2 days old
+    if(how_old>2){
+      # Show a modal when the button is pressed
+      shinyalert(
+        title = "Confirm Updating Meta Data from ECCC", 
+        text = paste0("Download can take about 20 seconds. \n
+                       Please wait for the map to refresh."),
+        type = "warning",
+        showCancelButton = TRUE,
+        confirmButtonText = "CONFIRM",
+        confirmButtonCol = "#FF0000",
+        animation = "slide-from-bottom",
+        callbackR = function(value) {
+          if(value == TRUE) {
+            
+            spin_map$show() #show spinner
+            
+            #takes quite long...like >10 seconds
+            weathercan::stations_dl(verbose = FALSE, quiet = TRUE) %>%
+              saveRDS(file = "station_meta_data.rds")
+            
+            return()
+            
+          } else{
+            shinyalert("Cancelled", type = 'error')
+          }
+        }
+      ) #end of shiny alert
+    } else{
+      # if the meta data is new, give them a lesson from Nate.
+      shinyalert(
+        title = "Stop Clicking!", 
+        text = "Can't you tell it is already up-to-date?! Nate thinks you are an idiot.",
+        type = "error",
+        showCancelButton = FALSE,
+        animation = "slide-from-bottom",
+        
+      )#end of shiny alert
+    }
+    
 
-      spin_map$show() #show spinner
-    
-      #takes quite long...like >10 seconds
-      weathercan::stations_dl(verbose = FALSE, quiet = TRUE) %>%
-           write.csv(file = "station_meta_data.csv", row.names = FALSE)
-    
-      # For testing only!
-      # Sys.sleep(5)
-      # station_meta() %>% 
-      #   write.csv(file = "station_meta_data.csv", row.names = FALSE)
-    
-
-  })
+  }) # end of shinyalert observeEvent button
+  
   
   
   
@@ -277,39 +351,32 @@ function(input, output, session) {
   
   
   # Data Table --------------------------------
+
   
-  # Update dropdown menu, what time intervals are available
-  observe({
+  # Station Dataset Download
+  ECCC_data <- reactive({
     
     validate(
       need(input$stn_id_input, "Invalid Station ID"))
-    
-    updateSelectInput(session, 
-                      "Intervals",
-                      choices = station_meta() %>%
-                        drop_na(start) %>%
-                        filter(station_id == id_entered()) %>%
-                        select(interval) %>%
-                        unique(),
-                      selected = "month"
-    )
-  }) # end of observe
-  
-  
-  # Station Dataset
-  dataSet_table <- reactive({
-    
+
     validate(
       need(input$Intervals %in% c("hour", "day", "month"),
            "Interval Not Found")
     )
     
-    # use the weathercan{} package function to retrieve data
-    weathercan::weather_dl(station_ids = id_entered(),
-                           interval = as.character(input$Intervals),
-                           quiet = TRUE
-    )
     
+    # Take a dependency on input$goButton
+    input$access_data
+    
+    shiny::isolate({
+
+        
+        weathercan::weather_dl(station_ids = id_entered(),
+                               interval = as.character(input$Intervals),
+                               quiet = TRUE)
+
+    })
+
   })
   
 
@@ -328,153 +395,129 @@ function(input, output, session) {
     
     spin_datatable$show() #show spinner
     
-    dataSet_table() %>%
-      
-      DT::datatable(
-        
-        extensions = c('Buttons', 'FixedColumns', 'Scroller'),
-        options = list(
+    # Take a dependency on input$access_data button
+    input$access_data
+    
+    # use isolate to break auto-dependency on station ID & interval 
+    shiny::isolate({
+        ECCC_data() %>%
           
-          # Options for extension "Buttons"
-          dom = 'Bfrtip',
-          
-          #buttons = list(I('colvis')),
-          
-          buttons = 
-            list(I('colvis'), list(
-              extend = 'collection',
-              buttons = list(
-                list(extend = 'csv', filename = file_dl_name()),
-                list(extend = 'excel', filename = file_dl_name()),
-                list(extend = 'pdf', filename = file_dl_name())
-              ),
-              text = 'Download Station Data'
-            )),
-          
-          columnDefs = list(list(className = "dt-center", targets = "_all")),
-          
-          # Options for extension "FixedColumns"
-          scrollX = TRUE,
-          fixedColumns = TRUE,
-          
-          # Options for extension "Scroller"
-          deferRender = TRUE,
-          scrollY = 600,
-          scroller = TRUE
-          
-        )
-        
-        
-      ) # End of datatable
+          DT::datatable(
+            
+            extensions = c('Buttons', 'FixedColumns', 'Scroller'),
+            options = list(
+              
+              # Options for extension "Buttons"
+              dom = 'Bfrtip',
+              
+              #buttons = list(I('colvis')),
+              
+              buttons = 
+                list(I('colvis'), list(
+                  extend = 'collection',
+                  buttons = list(
+                    list(extend = 'csv', filename = file_dl_name()),
+                    list(extend = 'excel', filename = file_dl_name()),
+                    list(extend = 'pdf', filename = file_dl_name())
+                  ),
+                  text = 'Download Station Data'
+                )),
+              
+              columnDefs = list(list(className = "dt-center", targets = "_all")),
+              
+              # Options for extension "FixedColumns"
+              scrollX = TRUE,
+              fixedColumns = TRUE,
+              
+              # Options for extension "Scroller"
+              deferRender = TRUE,
+              scrollY = 600,
+              scroller = TRUE
+              
+            )
+
+          ) # End of datatable
+    })
     
   }) # End of datatable rendering
   
   
   # Missing Data Explorer ------------------------------
+
   
-  # Update dropdown menu, what time intervals are available
-  
-  # Station Dataset
-  dataSet_plot <- reactive({
-    
-    validate(
-      need(input$stn_id_input, "Invalid Station ID"))
-    
-    validate(
-      need(input$Intervals %in% c("hour", "day", "month"),
-           "Interval Not Found")
-    )
+  output$pctmiss_plotly <- renderPlotly({
     
     spin_plot$show() #show spinner
-    # needed an exit for plotly type rendering
+    # exit required for plotly type rendering (need to be placed in upstream reactive)
     on.exit({
       spin_plot$hide()
     })
     
-    # use the weathercan{} package function to retrieve data
-    weathercan::weather_dl(station_ids = id_entered(),
-                           interval = as.character(input$Intervals),
-                           quiet = TRUE
-    )
+    # Take a dependency on input$access_data button
+    input$access_data
     
-
-    
-  })
-  
-  output$pctmiss_plotly <- renderPlotly({
-    
-    
-    validate(
-      need(input$stn_id_input, "Invalid Station ID"))
-    
-    validate(
-      need(input$Intervals %in% c("hour", "day", "month"),
-           "Interval Not Found")
-    )
-    
-    validate(
-      need(dim(dataSet_plot())[1]>1, "No data available for plotting")
-    )
-    
-    # available columns are different depends on intervals
-    if(input$Intervals == "day"){
-      
-      VAR_COLS <- dataSet_plot() %>% 
-                      select(year,
-                          # only keep variable columns
-                          cool_deg_days:total_snow, 
-                          # remove any flag columns
-                          -ends_with("flag")
-                      )
-                                
-    } else if(input$Intervals == "month") {
-      
-      VAR_COLS <- dataSet_plot() %>% 
-                      select(year,
-                             # only keep variable columns
-                             dir_max_gust:total_snow, 
-                             # remove any flag columns
-                             -ends_with("flag")
-                      )
-      
-    } else if(input$Intervals == "hour") {
-      
-      VAR_COLS <- dataSet_plot() %>% 
-                      select(year,
-                             # only keep variable columns
-                             weather:wind_spd, 
-                             # remove any flag columns
-                             -ends_with("flag")
-                      )
-    }
-    
-    TICK_FULL <- unique(VAR_COLS$year)
-    
-    # try to maintain no more than 15 labels
-    if(length(TICK_FULL)>80){
-      #only label every 10 years
-      TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 10 == 0, TICK_FULL, "")
-    } else if (length(TICK_FULL)<30){
-      #only label every 2 years
-      TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 2 == 0, TICK_FULL, "")
-    } else {
-      #only label every 5 years
-      TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 5 == 0, TICK_FULL, "")
-    }
-    
-    
-    miss_plot <- gg_miss_fct(VAR_COLS, year) + 
-      labs(title = paste("Completeness report for", 
-                         input$main_selector,
-                         input$stn_id_input,
-                         input$Intervals,
-                         "data")) +
-      scale_x_discrete(limits = TICK_FULL, 
-                       breaks = TICK_FULL, 
-                       labels = TICK_REDUCED)
-    
-    ggplotly(miss_plot)
-    
+    # use isolate to break auto-dependency on station ID & interval 
+    shiny::isolate({
+        # available columns are different depends on intervals
+        if(input$Intervals == "day"){
+          
+          VAR_COLS <- ECCC_data() %>% 
+                          select(year,
+                              # only keep variable columns
+                              cool_deg_days:total_snow, 
+                              # remove any flag columns
+                              -ends_with("flag")
+                          )
+                                    
+        } else if(input$Intervals == "month") {
+          
+          VAR_COLS <- ECCC_data() %>% 
+                          select(year,
+                                 # only keep variable columns
+                                 dir_max_gust:total_snow, 
+                                 # remove any flag columns
+                                 -ends_with("flag")
+                          )
+          
+        } else if(input$Intervals == "hour") {
+          
+          VAR_COLS <- ECCC_data() %>% 
+                          select(year,
+                                 # only keep variable columns
+                                 weather:wind_spd, 
+                                 # remove any flag columns
+                                 -ends_with("flag")
+                          )
+        }
+        
+        TICK_FULL <- unique(VAR_COLS$year)
+        
+        # try to maintain no more than 15 labels
+        if(length(TICK_FULL)>80){
+          #only label every 10 years
+          TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 10 == 0, TICK_FULL, "")
+        } else if (length(TICK_FULL)<30){
+          #only label every 2 years
+          TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 2 == 0, TICK_FULL, "")
+        } else {
+          #only label every 5 years
+          TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 5 == 0, TICK_FULL, "")
+        }
+        
+        
+        miss_plot <- gg_miss_fct(VAR_COLS, year) + 
+          labs(title = paste("Completeness report for", 
+                             input$main_selector,
+                             input$stn_id_input,
+                             input$Intervals,
+                             "data")) +
+          scale_x_discrete(limits = TICK_FULL, 
+                           breaks = TICK_FULL, 
+                           labels = TICK_REDUCED)
+        
+        ggplotly(miss_plot)
+        
+      })
   })
   # End the app loading spinner----
   waiter_hide()

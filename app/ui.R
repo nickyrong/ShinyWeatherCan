@@ -5,6 +5,8 @@ library(shinythemes)
 library(leaflet)
 library(plotly)
 library(waiter) #loading screen/spinner
+library(shinyalert)
+
 
 shinyUI(fluidPage(
   
@@ -54,8 +56,8 @@ shinyUI(fluidPage(
       
       #h4("Data Retrieval"),
       selectInput("Intervals", h4("Data Retrieval"), ""),
-      actionButton("access_data", "Get Data from ECCC"),
-      h6("When Data Table loads, all data are accessed")
+      useShinyalert(),
+      actionButton("access_data", "Download ECCC Data")
       
     ), # end of side bar panel
     
@@ -75,7 +77,8 @@ shinyUI(fluidPage(
                  br(),
                  "Station info last updated: ", textOutput("info_date"),
                  br(),
-                 actionButton("update_meta", "Update Station Map from ECCC (~ 20 secs)"),
+                 useShinyalert(),
+                 actionButton("update_meta", "Update Station Map from ECCC"),
                  br(),br(),
                  leafletOutput("MapPlot", height = 600),
                  "Zoom into map to see station locations",
@@ -87,8 +90,7 @@ shinyUI(fluidPage(
         
         tabPanel("Data Table",
                  br(),
-                 code("Please wait for data to be downloaded from ECCC,
-                       preview table & download options will appear below once download complete."),
+                 code("Table does not auto-update! Data must be re-download after switching station/interval."),
                  br(),br(),
                  h4("Data Preview"),
                  br(),
@@ -98,8 +100,10 @@ shinyUI(fluidPage(
         
         tabPanel("Data Completeness",
                  br(),
-                 code("Please wait for data to be downloaded from ECCC,
-                       plot will appear below once download complete."),
+                 code("Figure does not auto-update! Data must be re-download after switching station/interval."),
+                 sliderInput("plot_range", 
+                             h5("Review Period: Maximum 50 years when plotting daily or hourly data)"),
+                             min = 0, max = 3000, value = c(1900,1930)),
                  br(),br(),
                  plotlyOutput("pctmiss_plotly"),
                  br()

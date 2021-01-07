@@ -7,6 +7,14 @@ library(plotly)
 library(waiter) #loading screen/spinner
 library(shinyalert)
 
+# Memory limitation set for free servers (shinyapps.io/AWS EC2)
+# unix package requires unix machines (not available on windows)
+if(.Platform$OS.type == "unix") {
+library(unix)
+unix::rlimit_as(1e9)
+#the maximum size of the process's virtual memory (address space) in bytes.
+# 1GB = 1e9 bytes
+}
 
 shinyUI(fluidPage(
   
@@ -101,11 +109,9 @@ shinyUI(fluidPage(
         tabPanel("Data Completeness",
                  br(),
                  code("Figure does not auto-update! Data must be re-download after switching station/interval."),
-                 #h4("Due to server RAM limitation, only 50 years of daily data or 20 years of hourly data can be reviewed at a time"),
-                 # selectInput(inputId = "plot_range",
-                 #             label = h4('Review Period Begin:'),
-                 #             choices = NULL,
-                 #             selected = NULL),
+                 h4("Due to very limited server RAM limitation, 
+                    plotting can be very slow (like more than a minute),
+                    especially if station has more than 50 years of daily or 20 years of hourly data"),
                  br(),br(),
                  plotlyOutput("pctmiss_plotly"),
                  br()

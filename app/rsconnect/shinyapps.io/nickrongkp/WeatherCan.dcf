@@ -5,10 +5,9 @@ account: nickrongkp
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1605292
-bundleId: 4055732
+bundleId: 4069201
 url: https://nickrongkp.shinyapps.io/WeatherCan/
-when: 1609751517.02153
-lastSyncTime: 1609751517.02153
+when: 1610041007.02249
+lastSyncTime: 1610041007.02249
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: .RData

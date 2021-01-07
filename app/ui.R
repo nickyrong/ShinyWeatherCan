@@ -10,10 +10,11 @@ library(shinyalert)
 # Memory limitation set for free servers (shinyapps.io/AWS EC2)
 # unix package requires unix machines (not available on windows)
 if(.Platform$OS.type == "unix") {
+# Somehow cannot launch to shinyapps.io...
 library(unix)
 unix::rlimit_as(1e9)
 #the maximum size of the process's virtual memory (address space) in bytes.
-# 1GB = 1e9 bytes
+# 1Gb = 1e9 bytes
 } else if(.Platform$OS.type == "windows"){
   
   utils::memory.size(max = TRUE)
@@ -27,6 +28,7 @@ shinyUI(fluidPage(
   waiter_show_on_load(html = spin_3k(), color = "black"), # place at the top before content
   
   theme = shinytheme("yeti"),
+  tags$head(HTML("<title>Environment Canada Climate Data Retrieval Tool</title>")),
   
   # Change font color of error message to red
   tags$head(

@@ -707,6 +707,14 @@
       "Repository": "CRAN",
       "Hash": "6ea435c354e8448819627cf686f66e0a"
     },
+    "unix": {
+      "Package": "unix",
+      "Version": "1.5.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "OS_type": "unix",
+      "Hash": "628bcdd1e649df9af85cd55568952ae6"
+    },
     "utf8": {
       "Package": "utf8",
       "Version": "1.1.4",

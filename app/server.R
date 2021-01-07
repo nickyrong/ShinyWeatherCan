@@ -444,8 +444,26 @@ function(input, output, session) {
   
   # Missing Data Explorer ------------------------------
 
+  # observe({
+  #   
+  #   # Take a dependency on input$access_data button
+  #   # Also take dependency when review period been updated
+  #   input$access_data
+  #   input$plot_range
+  #   
+  #   # use isolate to break auto-dependency on station ID & interval 
+  #   shiny::isolate({
+  #       # Station Climate ID Selection by User
+  #       updateSelectInput(session, 'plot_range',
+  #                         choices = ECCC_data()$year %>% unique()
+  #       )
+  #   })
+  # 
+  # })
+
   
   output$pctmiss_plotly <- renderPlotly({
+
     
     spin_plot$show() #show spinner
     # exit required for plotly type rendering (need to be placed in upstream reactive)
@@ -453,11 +471,33 @@ function(input, output, session) {
       spin_plot$hide()
     })
     
+    
     # Take a dependency on input$access_data button
+    # Also take dependency when review period been updated
     input$access_data
+    #input$plot_range
     
     # use isolate to break auto-dependency on station ID & interval 
     shiny::isolate({
+      
+        
+        # if(as.character(input$Intervals) == "day"){
+        #   
+        #   yr_range <- seq(as.numeric(input$plot_range), as.numeric(input$plot_range)+49, 1)
+        #   reduced_data <- ECCC_data() %>% filter(year %in% yr_range)
+        #   
+        # } else if(as.character(input$Intervals) == "hour"){
+        #   
+        #   yr_range <- seq(as.numeric(input$plot_range), as.numeric(input$plot_range)+19, 1)
+        #   reduced_data <- ECCC_data() %>% filter(year %in% yr_range)
+        #   
+        # } else{
+        #   
+        #   reduced_data <- ECCC_data()
+        #   
+        # }
+ 
+      
         # available columns are different depends on intervals
         if(input$Intervals == "day"){
           

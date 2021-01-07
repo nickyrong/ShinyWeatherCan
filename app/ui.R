@@ -14,6 +14,11 @@ library(unix)
 unix::rlimit_as(1e9)
 #the maximum size of the process's virtual memory (address space) in bytes.
 # 1GB = 1e9 bytes
+} else if(.Platform$OS.type == "windows"){
+  
+  utils::memory.size(max = TRUE)
+  suppressWarnings(utils::memory.limit(size = 1000))
+  #request a new limit, in Mb: 1024 Mb = 1 Gb
 }
 
 shinyUI(fluidPage(

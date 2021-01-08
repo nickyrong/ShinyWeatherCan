@@ -467,6 +467,9 @@ function(input, output, session) {
     # use isolate to break auto-dependency on station ID & interval 
     shiny::isolate({
       
+        validate(
+          need(nrow(ECCC_data())<30000, "Data size exceeding server capacity")
+        )
       
         # available columns are different depends on intervals
         if(input$Intervals == "day"){

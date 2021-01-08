@@ -35,7 +35,7 @@ shinyUI(fluidPage(
     tags$style(HTML("
       .shiny-output-error-validation {
         color: red;
-
+        font-weight: bold;
       }
     "))
   ),
@@ -116,9 +116,8 @@ shinyUI(fluidPage(
         tabPanel("Data Completeness",
                  br(),
                  code("Figure does not auto-update! Data must be re-download after switching station/interval."),
-                 h4("Due to very limited server RAM limitation, 
-                    plotting can be very slow (like more than a minute),
-                    especially if station has more than 50 years of daily or 20 years of hourly data"),
+                 h4("Due to very limited server memory capacity, large dataset cannot be plotted 
+                 (threshold: >80 years of daily data or >3 years of hourly data)"),
                  br(),br(),
                  plotlyOutput("pctmiss_plotly"),
                  br()

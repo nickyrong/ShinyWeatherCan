@@ -254,8 +254,8 @@ function(input, output, session) {
     } else{
       # if the meta data is new, give them a lesson from Nate.
       shinyalert(
-        title = "Stop Clicking!", 
-        text = "Can't you tell it is already up-to-date?! Nate thinks you are an idiot.",
+        title = "No Action Needed", 
+        text = "Already up-to-date.",
         type = "error",
         showCancelButton = FALSE,
         animation = "slide-from-bottom",

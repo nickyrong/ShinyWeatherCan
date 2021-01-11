@@ -637,6 +637,13 @@
       "Repository": "CRAN",
       "Hash": "a130b62f6d5533fcc1cab6c8161358d9"
     },
+    "shinyjs": {
+      "Package": "shinyjs",
+      "Version": "2.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9ddfc91d4280eaa34c2103951538976f"
+    },
     "shinythemes": {
       "Package": "shinythemes",
       "Version": "1.1.2",

@@ -5,22 +5,9 @@ library(shinythemes)
 library(leaflet)
 library(plotly)
 library(waiter) #loading screen/spinner
-library(shinyalert)
+library(shinyalert) # pop-up message
+library(shinyjs) # needed for the pop-up to auto close
 
-# Memory limitation set for free servers (shinyapps.io/AWS EC2)
-# unix package requires unix machines (not available on windows)
-if(.Platform$OS.type == "unix") {
-# Somehow cannot launch to shinyapps.io...
-library(unix)
-unix::rlimit_as(1e9)
-#the maximum size of the process's virtual memory (address space) in bytes.
-# 1Gb = 1e9 bytes
-} else if(.Platform$OS.type == "windows"){
-  
-  utils::memory.size(max = TRUE)
-  suppressWarnings(utils::memory.limit(size = 1000))
-  #request a new limit, in Mb: 1024 Mb = 1 Gb
-}
 
 shinyUI(fluidPage(
   
@@ -55,24 +42,33 @@ shinyUI(fluidPage(
     sidebarPanel(
       width = 3,
       selectInput(inputId = "main_selector",
-                   label = h4('Select ID Type'),
+                   label = h4('1. Select ID Type'),
                    choices = list('Climate ID', 'WMO ID', 'TC ID'),
                    selected = 'Climate ID'),
     
       
-      selectizeInput("stn_id_input", label = h4("Enter Station ID"),
+      selectizeInput("stn_id_input", label = h4("2. Enter Station ID"),
                      choices = c("Loading..."),
                      multiple= FALSE,
                      options = list(maxOptions = 10)),
 
-      h4("Station Info"),
+      h4("3. Review Station Info"),
       h6(htmlOutput("stn_input_info")),
       h6(htmlOutput("stn_warning")),
+
+      br(),
+      selectInput("Intervals", h4("4. Download Data"), ""),
       
-      #h4("Data Retrieval"),
-      selectInput("Intervals", h4("Data Retrieval"), ""),
-      useShinyalert(),
-      actionButton("access_data", "Download ECCC Data")
+      # conditional panel
+      conditionalPanel(
+        condition = "input.Intervals != 'month'",
+        sliderInput("select_range", "Select Range:", min = 1800, max = 2100,
+                    value = c(1900,2020), sep = ""),
+      ),
+      
+      useShinyalert(),useShinyjs(),
+      uiOutput("ECCC_button")
+      
       
     ), # end of side bar panel
     
@@ -105,9 +101,7 @@ shinyUI(fluidPage(
         
         tabPanel("Data Table",
                  br(),
-                 code("Table does not auto-update! Data must be re-download after switching station/interval."),
-                 br(),br(),
-                 h4("Data Preview"),
+                 htmlOutput("data_preview_title"),
                  br(),
                  DT::dataTableOutput("datatable"),
                  br()
@@ -115,10 +109,8 @@ shinyUI(fluidPage(
         
         tabPanel("Data Completeness",
                  br(),
-                 code("Figure does not auto-update! Data must be re-download after switching station/interval."),
-                 h4("Due to very limited server memory capacity, large dataset cannot be plotted 
-                 (threshold: >80 years of daily data or >3 years of hourly data)"),
-                 br(),br(),
+                 htmlOutput("data_preview_title_plot"),
+                 br(),
                  plotlyOutput("pctmiss_plotly"),
                  br()
         )

@@ -16,6 +16,9 @@ function(input, output, session) {
   spin_datatable <- Waiter$new("datatable", html = spin_3k(), color = "black")
   spin_plot <- Waiter$new("pctmiss_plotly", html = spin_3k(), color = "black")
   
+  # Initial empty reactiveVal to store ECCC data & dataset title
+  downloaded_ECCC <- reactiveVal(tibble())
+  downloaded_title <- reactiveVal(as.character())
   
   # SideBar UI-------------------------------
   
@@ -136,7 +139,7 @@ function(input, output, session) {
     
     if(!is.na(M) & !is.na(D) & !is.na(H)){
       validate(need(
-        (M>=D) & (M>=H), "CAUTION: ECCC monthly data for this station are shorter than daily/hourly"
+        (M>=D) & (M>=H), "CAUTION: ECCC monthly data for this station are shorter than daily or hourly"
       ))
     } else if(!is.na(M) & !is.na(D)){
       validate(need(
@@ -158,25 +161,142 @@ function(input, output, session) {
   })
   
   
+  # update the data record range selector for daily & hourly data
+  observe({
+    
+    if(input$Intervals != 'month'){
+      
+      validate(
+        need(input$stn_id_input, "Invalid Station ID"))
+      
+      stn_info <- station_meta() %>% filter(station_id == id_entered(),
+                                            interval == as.character(input$Intervals))
+      
+      stn_min = stn_info$start
+      stn_max = stn_info$end
+
+      updateSliderInput(session, "select_range", value = c(stn_min, stn_max),
+                        min = stn_min, max = stn_max, step = 1)
+    }
+    
+  })
   
-  # ECCC data access pop-up message
+  
+  # Check if the selected range is too big
+  range_check <- reactive({
+    input$select_range[2] - input$select_range[1]
+  })
+  
+  # ECCC download button UI
+  output$ECCC_button <- renderUI({
+    
+    # no limit on monthly data
+    if(input$Intervals == 'month'){
+      actionButton("access_data", "Download ECCC Data")
+    } # max 50 years for daily OR 3 years for hourly data
+    else if((input$Intervals == 'day' & range_check() > 50) ||
+            (input$Intervals == 'hour' & range_check() > 3)){
+      
+      actionButton("exceed_button", "Data Range Exceeded Limit")
+      
+    } else {
+      
+      actionButton("access_data", "Download ECCC Data")
+      
+    }
+  })    
+  
+  # pop-up window for excessive data request
+  observeEvent(input$exceed_button, {
+
+    # Show a modal when the button is pressed
+    shinyalert(
+      title = "Download Limit Exceeded", 
+      text = paste0("Limit is 50 years for daily data or 3 years for hourly data."),
+      type = "warning",
+      showCancelButton = FALSE,
+      animation = "slide-from-bottom"
+    )
+    
+  }) # end of exceed_button
+  
+  # pop-up window for downloading ECCC data
   observeEvent(input$access_data, {
     
     validate(
       need(input$stn_id_input, "Invalid Station ID"))
+
     
     # Show a modal when the button is pressed
     shinyalert(
       title = "Downloading Data from ECCC", 
-      text = paste0("Please be patient with the download. \n
-                     Download is complete when Data Table & Completeness Figure are re-loaded."),
-      type = "warning",
+      text = paste0("Ringing up ECCC, please be patient."),
+      type = "info",
       showCancelButton = FALSE,
+      showConfirmButton = FALSE,
       animation = "slide-from-bottom"
-
     )
-  }) # end of shinyalert observeEvent button
+    
+    # download the data into memory (by updating ractive values)
+    if(as.character(input$Intervals) == "month"){
+      downloaded_ECCC(
+        weathercan::weather_dl(station_ids = id_entered(),
+                               interval = "month",
+                               quiet = TRUE)
+      )
+      
+      downloaded_title(paste0(unique(downloaded_ECCC()$station_name),
+                                  " (Climate ID: ", unique(downloaded_ECCC()$climate_id),
+                                  ") Monthly: ", min(downloaded_ECCC()$year), "-", 
+                                  max(downloaded_ECCC()$year)
+                        )
+      )
+      
+    } else if(as.character(input$Intervals) == "day") {
+      downloaded_ECCC(
+        weathercan::weather_dl(station_ids = id_entered(),
+                               interval = "day",
+                               start = base::as.Date(paste0(input$select_range[1],"-01-01")),
+                               end = base::as.Date(paste0(input$select_range[2],"-12-31")),
+                               quiet = TRUE)
+      )
+      
+      downloaded_title(paste0(unique(downloaded_ECCC()$station_name),
+                              " (Climate ID: ", unique(downloaded_ECCC()$climate_id),
+                              ") Daily: ", min(downloaded_ECCC()$year), "-", 
+                              max(downloaded_ECCC()$year)
+                        )
+      )
+    } else{
+      downloaded_ECCC(
+        weathercan::weather_dl(station_ids = id_entered(),
+                               interval = "hour",
+                               start = base::as.Date(paste0(input$select_range[1],"-01-01")),
+                               end = base::as.Date(paste0(input$select_range[2],"-12-31")),
+                               quiet = TRUE)
+      )
+      
+      downloaded_title(paste0(unique(downloaded_ECCC()$station_name),
+                              " (Climate ID: ", unique(downloaded_ECCC()$climate_id),
+                              ") Hourly (local tz): ", min(downloaded_ECCC()$year), "-", 
+                              max(downloaded_ECCC()$year)
+                        )
+      )
+    }
+    
+    
+    # close the previous pop-up message
+    shinyjs::runjs("swal.close();")
+    
+    # Show message
+    shinyalert("Download Complete!", "", type = "success")
+    
+  }) # end of access_data button
   
+  
+  output$data_preview_title_plot <- output$data_preview_title <- renderUI({
+    HTML(paste0("&#128226;<b> Currently displayed data: </b><br>", downloaded_title()))
+  })
 
   
   
@@ -355,56 +475,34 @@ function(input, output, session) {
   
   
   # Data Table --------------------------------
-
   
-  # Station Dataset Download
-  ECCC_data <- reactive({
-    
-    validate(
-      need(input$stn_id_input, "Invalid Station ID"))
-
-    validate(
-      need(input$Intervals %in% c("hour", "day", "month"),
-           "Interval Not Found")
-    )
-    
-    
-    # Take a dependency on input$goButton
-    input$access_data
-    
-    shiny::isolate({
-
-        
-        weathercan::weather_dl(station_ids = id_entered(),
-                               interval = as.character(input$Intervals),
-                               quiet = TRUE)
-
-    })
-
-  })
-  
-
+  # update download title & file name
   file_dl_name <- reactive({
     
-    ID_TYPE <- input$main_selector %>% as.character()
-    ID <- input$stn_id_input %>% as.character()
-    INTERVAL <- input$Intervals %>% as.character()
-    
-    paste(ID_TYPE, ID, INTERVAL, sep = " ")
+    tt <- downloaded_title()
+    # replace any spacial character with underscore
+    tt2 <- gsub("[^A-Za-z0-9,;._-]","_", tt)
+    # replace double underscore to single
+    gsub("__", "_", tt2)
     
   })
   
   # DataTable rendering
   output$datatable <- DT::renderDataTable({
     
+    validate(
+      need(nrow(downloaded_ECCC())>0, "No data")
+    )
+    
     spin_datatable$show() #show spinner
     
-    # Take a dependency on input$access_data button
-    input$access_data
+    # table re-render when new data downloaded
+    downloaded_ECCC()
     
     # use isolate to break auto-dependency on station ID & interval 
     shiny::isolate({
-        ECCC_data() %>%
+      
+      downloaded_ECCC() %>%
           
           DT::datatable(
             
@@ -420,9 +518,10 @@ function(input, output, session) {
                 list(I('colvis'), list(
                   extend = 'collection',
                   buttons = list(
-                    list(extend = 'csv', filename = file_dl_name()),
-                    list(extend = 'excel', filename = file_dl_name()),
-                    list(extend = 'pdf', filename = file_dl_name())
+                    list(extend = 'csv', 
+                         filename = file_dl_name(), title = file_dl_name()),
+                    list(extend = 'excel', 
+                         filename = file_dl_name(), title = file_dl_name())
                   ),
                   text = 'Download Station Data'
                 )),
@@ -451,10 +550,9 @@ function(input, output, session) {
   
   output$pctmiss_plotly <- renderPlotly({
 
-    # Take a dependency on input$access_data button
-    # Also take dependency when review period been updated
-    input$access_data
-    #input$plot_range
+    validate(
+      need(nrow(downloaded_ECCC())>0, "No data")
+    )
     
     spin_plot$show() #show spinner
     # exit required for plotly type rendering (need to be placed in upstream reactive)
@@ -462,19 +560,16 @@ function(input, output, session) {
       spin_plot$hide()
     })
     
-
+    # plot re-render when new data downloaded
+    downloaded_ECCC()
     
     # use isolate to break auto-dependency on station ID & interval 
     shiny::isolate({
       
-        validate(
-          need(nrow(ECCC_data())<30000, "Data size exceeding server capacity")
-        )
-      
         # available columns are different depends on intervals
         if(input$Intervals == "day"){
           
-          VAR_COLS <- ECCC_data() %>% 
+          VAR_COLS <- downloaded_ECCC() %>% 
                           select(year,
                               # only keep variable columns
                               cool_deg_days:total_snow, 
@@ -484,7 +579,7 @@ function(input, output, session) {
                                     
         } else if(input$Intervals == "month") {
           
-          VAR_COLS <- ECCC_data() %>% 
+          VAR_COLS <- downloaded_ECCC() %>% 
                           select(year,
                                  # only keep variable columns
                                  dir_max_gust:total_snow, 
@@ -494,7 +589,7 @@ function(input, output, session) {
           
         } else if(input$Intervals == "hour") {
           
-          VAR_COLS <- ECCC_data() %>% 
+          VAR_COLS <- downloaded_ECCC() %>% 
                           select(year,
                                  # only keep variable columns
                                  weather:wind_spd, 
@@ -509,29 +604,24 @@ function(input, output, session) {
         if(length(TICK_FULL)>80){
           #only label every 10 years
           TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 10 == 0, TICK_FULL, "")
-        } else if (length(TICK_FULL)<30){
-          #only label every 2 years
-          TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 2 == 0, TICK_FULL, "")
+        } else if (length(TICK_FULL)<20){
+          #label every 1 years
+          TICK_REDUCED <- TICK_FULL
         } else {
           #only label every 5 years
           TICK_REDUCED <- ifelse(as.numeric(TICK_FULL) %% 5 == 0, TICK_FULL, "")
         }
-        
+
         
         miss_plot <- gg_miss_fct(VAR_COLS, year) + 
-          labs(title = paste("Completeness report for", 
-                             input$main_selector,
-                             input$stn_id_input,
-                             input$Intervals,
-                             "data")) +
           scale_x_discrete(limits = TICK_FULL, 
                            breaks = TICK_FULL, 
                            labels = TICK_REDUCED)
         
         ggplotly(miss_plot)
-        
-      })
+    }) # end of isolate()
   })
+  
   # End the app loading spinner----
   waiter_hide()
   

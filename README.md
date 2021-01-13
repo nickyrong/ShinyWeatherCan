@@ -1,47 +1,50 @@
+## Authors 
 
-
+* [Nick Rong](https://github.com/nickyrong)
+* [Nate Smith](https://github.com/WraySmith)
 <br/>
 
-**Authors:** <br/>
-Nick Rong ([nickyrong](https://github.com/nickyrong)) <br/>
-Nate Smith ([WraySmith](https://github.com/WraySmith)) <br/><br/>
-Last Update 03/28/2020 <br/>
-Last Change: added interactive available data plot using plotly <br/>
+## Overview
+ShinyWeatherCan is currently available at: https://nickrongkp.shinyapps.io/WeatherCan/
 
-### Overview
 This app allows the user to enter a station ID to access climate data from:
 [Environment and Climate Change Canada (ECCC)](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html).
 <br/>
 
-Currently the ECCC website only allows data downloads of one month at a time. The current scope of this app is to minimize repetition for downloading data.
+Currently the ECCC website only allows data downloads of one month at a time. The current scope of this app is to minimize repetition for downloading data. Functionality to download data from ECCC within this app is provided by the [weathercan package](https://github.com/ropensci/weathercan). The weathercan package is part of the [rOpenSci project](http://ropensci.org) and authored by Dr. Steffi LaZerte.  
+<br/>
+<img src="https://github.com/ropensci/weathercan/raw/master/inst/assets/weathercan_logo.png" width="6%" />
 <br/>
 
-Functionality in this ShinyApp is provided by [weathercan package](https://github.com/ropensci/weathercan). This R package is developed and maintained by members of the rOpenSci (main contributors include Dr. Steffi LaZerte and Sam Albers, Data Scientist in BC Goverment's Data Science & Analytics Unit).
+## Usage:
 
-<br/>
-<img src="https://github.com/ropensci/weathercan/raw/master/inst/assets/weathercan_logo.png" width="10%" />
-<br/>
-
-
-### Usage:
-
-Currently the app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of others and close the app/browser tab as soon as possible when you are done to conserve resources for others, thank you.
+The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of others and close the app/browser tab as soon as possible when you are done to conserve resources for others, thank you.
 
 **Data are downloaded on-the-fly from ECCC. Please be patient as the downloads can be fairly large (especially for hourly and daily data).**
 
-Check the Station Map to identify potential stations and their IDs. If the map is not visible, it is still being loaded.
-
-Enter station ID once the station meta-data are loaded (the `Enter ID` box will appear)
-
-The `Data Table` tab presents a preview of data. Users may download the data as a .csv for further processing and analysis.
+Currently the app allows the user to:
+- Check the Station Map to identify potential stations and their Climate IDs (non-searchable map). 
+- Access hourly, daily, or monthly climate data from ECCC for a selected Climate Station ID. WMO or TC IDs can be used if they are known to the user.
+- Use the `Data Table` tab to preview the accessed data. Users may download the data as a .csv/.xls/.pdf file for further processing and analysis.
+- View the `Data Completeness` tab which provides an overview of the completeness of data variables in each year. The plot is interactive and can be zoomed in or out.
 <br/>
 
-### Future updates
+## License
+Copyright © 2021 [Nick Rong](https://github.com/nickyrong) & [Nate Smith](https://github.com/WraySmith)
 
-Data visualization & screening may be included in future updates.
+Released under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 <br/>
 
-### Feedback & Suggestions
+## Contributing
 
-Please contact [Nick](https://github.com/nickyrong) or [Nate](https://github.com/WraySmith).
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/nickyrong/ShinyWeatherCan/issues).
+
+Please note that this project was created under a learning objective and it is provided in the event it is useful to others. Accordingly, it is not necessarily under active development. 
+<br/>
 <br/>

@@ -2,8 +2,6 @@
 
 * [Nick Rong](https://github.com/nickyrong)
 * [Nate Smith](https://github.com/WraySmith)
-<br/>
-
 ## Overview
 ShinyWeatherCan is currently available at: https://nickrongkp.shinyapps.io/WeatherCan/
 
@@ -11,14 +9,14 @@ This app allows the user to enter a station ID to access climate data from:
 [Environment and Climate Change Canada (ECCC)](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html).
 <br/>
 
-Currently the ECCC website only allows data downloads of one month at a time. The current scope of this app is to minimize repetition for downloading data. Functionality to download data from ECCC within this app is provided by the [weathercan package](https://github.com/ropensci/weathercan). The weathercan package is part of the [rOpenSci project](http://ropensci.org) and authored by Dr. Steffi LaZerte.  
+Currently the ECCC website only allows data downloads of one month at a time. The current scope of this app is to minimize repetition for downloading data. Functionality to download data from ECCC within this app is provided by the [weathercan package](https://github.com/ropensci/weathercan) which is part of the [rOpenSci project](http://ropensci.org) and authored by Dr. Steffi LaZerte.  
 <br/>
 <img src="https://github.com/ropensci/weathercan/raw/master/inst/assets/weathercan_logo.png" width="6%" />
 <br/>
 
 ## Usage:
 
-The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of others and close the app/browser tab as soon as possible when you are done to conserve resources for others, thank you.
+The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of this and close the app/browser tab as soon as possible when you are done, thank you.
 
 **Data are downloaded on-the-fly from ECCC. Please be patient as the downloads can be fairly large (especially for hourly and daily data).**
 

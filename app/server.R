@@ -197,7 +197,7 @@ function(input, output, session) {
     else if((input$Intervals == 'day' & range_check() > 50) ||
             (input$Intervals == 'hour' & range_check() > 3)){
       
-      actionButton("exceed_button", "Data Range Exceeded Limit")
+      actionButton("exceed_button", "Download ECCC Data")
       
     } else {
       
@@ -230,7 +230,7 @@ function(input, output, session) {
     # Show a modal when the button is pressed
     shinyalert(
       title = "Downloading Data from ECCC", 
-      text = paste0("Ringing up ECCC, please be patient."),
+      text = paste0("please be patient"),
       type = "info",
       showCancelButton = FALSE,
       showConfirmButton = FALSE,
@@ -295,7 +295,7 @@ function(input, output, session) {
   
   
   output$data_preview_title_plot <- output$data_preview_title <- renderUI({
-    HTML(paste0("&#128226;<b> Currently displayed data: </b><br>", downloaded_title()))
+    HTML(paste0("<b> Currently displayed data: </b><br>", downloaded_title()))
   })
 
   
@@ -372,7 +372,7 @@ function(input, output, session) {
         }
       ) #end of shiny alert
     } else{
-      # if the meta data is new, give them a lesson from Nate.
+      # if the meta data is new, provide pop-up
       shinyalert(
         title = "No Action Needed", 
         text = "Already up-to-date.",

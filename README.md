@@ -2,6 +2,8 @@
 
 * [Nick Rong](https://github.com/nickyrong)
 * [Nate Smith](https://github.com/WraySmith)
+<br/>
+
 ## Overview
 ShinyWeatherCan is currently available at: https://nickrongkp.shinyapps.io/WeatherCan/
 

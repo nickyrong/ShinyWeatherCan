@@ -3,6 +3,8 @@ rm(list = ls())
 library(tidyr)
 library(renv)
 library(dplyr)
+library(lutz) # additional package required by weathercan
+library(sf) # additional package required by weathercan
 library(weathercan) # download ECCC station info and data
 library(DT) # datatable()
 library(naniar) # for summarizing available data

@@ -490,7 +490,9 @@ function(input, output, session) {
   })
   
   # DataTable rendering
-  output$datatable <- DT::renderDataTable({
+  # User client-side processing otherwise download button only 
+  # shows data being displayed
+  output$datatable <- DT::renderDataTable(server = FALSE,{
     
     validate(
       need(nrow(downloaded_ECCC())>0, "No data")

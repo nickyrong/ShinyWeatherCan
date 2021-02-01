@@ -57,7 +57,7 @@ shinyUI(fluidPage(
       h6(htmlOutput("stn_warning")),
 
       br(),
-      selectInput("Intervals", h4("4. Download Data"), ""),
+      selectInput("Intervals", h4("4. Request Data"), ""),
       
       # conditional panel
       conditionalPanel(
@@ -103,6 +103,8 @@ shinyUI(fluidPage(
                  br(),
                  htmlOutput("data_preview_title"),
                  br(),
+                 uiOutput("downloadbutton"),
+                 br(),
                  DT::dataTableOutput("datatable"),
                  br()
         ), # End of Data Table tab
@@ -111,6 +113,7 @@ shinyUI(fluidPage(
                  br(),
                  htmlOutput("data_preview_title_plot"),
                  br(),
+                 h5("Figure is interactive, see top-right corner for available tools"),
                  plotlyOutput("pctmiss_plotly"),
                  br()
         )

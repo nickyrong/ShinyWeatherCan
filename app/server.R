@@ -194,16 +194,16 @@ function(input, output, session) {
     
     # no limit on monthly data
     if(input$Intervals == 'month'){
-      actionButton("access_data", "Download ECCC Data")
+      actionButton("access_data", "Request ECCC Data")
     } # max 50 years for daily OR 3 years for hourly data
     else if((input$Intervals == 'day' & range_check() > 50) ||
             (input$Intervals == 'hour' & range_check() > 3)){
       
-      actionButton("exceed_button", "Download ECCC Data")
+      actionButton("exceed_button", "Request ECCC Data")
       
     } else {
       
-      actionButton("access_data", "Download ECCC Data")
+      actionButton("access_data", "Request ECCC Data")
       
     }
   })    
@@ -213,7 +213,7 @@ function(input, output, session) {
 
     # Show a modal when the button is pressed
     shinyalert(
-      title = "Download Limit Exceeded", 
+      title = "Request Limit Exceeded", 
       text = paste0("Limit is 50 years for daily data or 3 years for hourly data."),
       type = "warning",
       showCancelButton = FALSE,
@@ -231,7 +231,7 @@ function(input, output, session) {
     
     # Show a modal when the button is pressed
     shinyalert(
-      title = "Downloading Data from ECCC", 
+      title = "Requesting Data from ECCC", 
       text = paste0("please be patient"),
       type = "info",
       showCancelButton = FALSE,
@@ -291,7 +291,7 @@ function(input, output, session) {
     shinyjs::runjs("swal.close();")
     
     # Show message
-    shinyalert("Download Complete!", "", type = "success")
+    shinyalert("Request Complete!", "", type = "success")
     
   }) # end of access_data button
   
@@ -489,10 +489,30 @@ function(input, output, session) {
     
   })
   
+  # Download button does not render if no data have been requested from ECCC
+  output$downloadbutton <- renderUI({
+    
+    if(nrow(downloaded_ECCC())>0) {
+      downloadButton('downloadData', 'Save Downloaded Data (.csv)')
+    }
+    
+  })
+  
+  # Data Download Button
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste0(file_dl_name(),
+             ".csv", sep = "")
+    },
+    content = function(file) {
+      # don't use the tidy write_csv() because it turns datetime to UTC()
+      write.csv(downloaded_ECCC(), file, row.names = FALSE)
+    }
+  )
+  
   # DataTable rendering
-  # User client-side processing otherwise download button only 
-  # shows data being displayed
-  output$datatable <- DT::renderDataTable(server = FALSE,{
+  # Use Server side processing
+  output$datatable <- DT::renderDataTable({
     
     validate(
       need(nrow(downloaded_ECCC())>0, "No data")
@@ -509,26 +529,14 @@ function(input, output, session) {
       downloaded_ECCC() %>%
           
           DT::datatable(
-            
+            rownames= FALSE,
             extensions = c('Buttons', 'FixedColumns', 'Scroller'),
             options = list(
               
               # Options for extension "Buttons"
               dom = 'Bfrtip',
               
-              #buttons = list(I('colvis')),
-              
-              buttons = 
-                list(I('colvis'), list(
-                  extend = 'collection',
-                  buttons = list(
-                    list(extend = 'csv', 
-                         filename = file_dl_name(), title = file_dl_name()),
-                    list(extend = 'excel', 
-                         filename = file_dl_name(), title = file_dl_name())
-                  ),
-                  text = 'Download Station Data'
-                )),
+              buttons = list(I('colvis')),
               
               columnDefs = list(list(className = "dt-center", targets = "_all")),
               

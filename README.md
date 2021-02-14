@@ -5,7 +5,9 @@
 <br/>
 
 ## Overview
-ShinyWeatherCan is currently available at: https://nickrongkp.shinyapps.io/WeatherCan/
+ShinyWeatherCan is currently available at either of: 
+- https://app.waterexplorer.net/shinyWeather/
+- https://nickrongkp.shinyapps.io/WeatherCan/
 
 This app allows the user to enter a station ID to access climate data from:
 [Environment and Climate Change Canada (ECCC)](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html).
@@ -18,7 +20,7 @@ Currently the ECCC website only allows data downloads of one month at a time. Th
 
 ## Usage:
 
-The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of this and close the app/browser tab as soon as possible when you are done, thank you.
+The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of this and close the app/browser tab as soon as possible when you are done, thank you. The app is currently also hosted on a free tier AWS account at https://app.waterexplorer.net/shinyWeather/. If one of the services is not working, it is recommended to try the other.  
 
 **Data are downloaded on-the-fly from ECCC. Please be patient as the downloads can be fairly large (especially for hourly and daily data).**
 

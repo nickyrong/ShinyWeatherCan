@@ -27,7 +27,7 @@ The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/)
 Currently the app allows the user to:
 - Check the Station Map to identify potential stations and their Climate IDs (non-searchable map). 
 - Access hourly, daily, or monthly climate data from ECCC for a selected Climate Station ID. WMO or TC IDs can be used if they are known to the user.
-- Use the `Data Table` tab to preview the accessed data. Users may download the data as a .csv/.xls/.pdf file for further processing and analysis.
+- Use the `Data Table` tab to preview the accessed data. Users may download the data as a `.csv` file for further processing and analysis.
 - View the `Data Completeness` tab which provides an overview of the completeness of data variables in each year. The plot is interactive and can be zoomed in or out.
 <br/>
 

@@ -1,11 +1,11 @@
 ## Authors 
 
 * [Nick Rong](https://github.com/nickyrong)
-* [Nate Smith](https://github.com/WraySmith)
+* [Nate Smith](https://nathan-smith.net)
 <br/>
 
 ## Overview
-ShinyWeatherCan is currently available at either of: 
+ShinyWeatherCan is currently available at either: 
 - https://app.waterexplorer.net/shinyWeather/
 - https://nickrongkp.shinyapps.io/WeatherCan/
 
@@ -20,7 +20,7 @@ Currently the ECCC website only allows data downloads of one month at a time. Th
 
 ## Usage:
 
-The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of this and close the app/browser tab as soon as possible when you are done, thank you. The app is currently also hosted on a free tier AWS account at https://app.waterexplorer.net/shinyWeather/. If one of the services is not working, it is recommended to try the other.  
+The app is hosted on [shinyapps.io](https://nickrongkp.shinyapps.io/WeatherCan/) with a free account. Please be mindful of this and close the app/browser tab as soon as possible when you are done, thank you. The app is also hosted on a free tier AWS account at https://app.waterexplorer.net/shinyWeather/. If one of the services is not working, it is recommended to try the other.  
 
 **Data are downloaded on-the-fly from ECCC. Please be patient as the downloads can be fairly large (especially for hourly and daily data).**
 
@@ -47,6 +47,8 @@ limitations under the License.
 
 Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/nickyrong/ShinyWeatherCan/issues).
 
-Please note that this project was created under a learning objective and it is provided in the event it is useful to others. Accordingly, it is not necessarily under active development. 
+Please note that this project is released with a [Contributor Code of Conduct](https://github.com/nickyrong/ShinyWeatherCan/blob/main/CODE_OF_CONDUCT.md).By participating in this project you agree to abide by its terms.
+
+Also note that this project was created under a learning objective and it is provided in the event it is useful to others. Accordingly, it is not necessarily under active development. 
 <br/>
 <br/>

@@ -27,7 +27,7 @@ function(input, output, session) {
   # Load Archived Station Data (new download takes about 15 seconds)
   station_meta <- reactiveFileReader(intervalMillis = 1000, 
                                      session,
-                                     filePath = "station_meta_data.rds", 
+                                     filePath = "./database/stations.rds", 
                                      readFunc = readRDS
                                      )
   
@@ -38,7 +38,7 @@ function(input, output, session) {
       
       # Station Climate ID Selection by User
       updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$climate_id[!is.na(station_meta()$climate_id)],
+                        choices = station_meta()$stn$climate_id[!is.na(station_meta()$stn$climate_id)],
                         selected = "1047672"
       )
       
@@ -46,7 +46,7 @@ function(input, output, session) {
       
       # Station WMO ID Selection by User
       updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$WMO_id[!is.na(station_meta()$WMO_id)],
+                        choices = station_meta()$stn$WMO_id[!is.na(station_meta()$stn$WMO_id)],
                         selected = NULL
       )
       
@@ -55,7 +55,7 @@ function(input, output, session) {
       
       # Station TC ID Selection by User
       updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$TC_id[!is.na(station_meta()$TC_id)],
+                        choices = station_meta()$stn$TC_id[!is.na(station_meta()$stn$TC_id)],
                         selected = NULL
       )
       
@@ -72,20 +72,20 @@ function(input, output, session) {
     
     if (input$main_selector == 'Climate ID'){
       
-      station_meta() %>% 
+      station_meta()$stn %>% 
         filter(climate_id == input$stn_id_input) %>% 
         select(station_id) %>% slice(1) %>% as.numeric()
 
     } else if (input$main_selector == 'WMO ID'){
       
-      station_meta() %>% 
+      station_meta()$stn %>% 
         filter(WMO_id == input$stn_id_input) %>% 
         select(station_id) %>% slice(1) %>% as.numeric()
       
       
     } else if (input$main_selector == 'TC ID'){
       
-      station_meta() %>% 
+      station_meta()$stn %>% 
         filter(TC_id == input$stn_id_input) %>% 
         select(station_id) %>% slice(1) %>% as.numeric()
 
@@ -101,7 +101,7 @@ function(input, output, session) {
     validate(
       need(input$stn_id_input, "Invalid Station ID"))
     
-    int_opts <- station_meta() %>%
+    int_opts <- station_meta()$stn %>%
                   drop_na(start) %>%
                   filter(station_id == id_entered()) %>%
                   select(interval) %>%
@@ -134,7 +134,7 @@ function(input, output, session) {
     validate(
       need(input$stn_id_input, "Invalid Station ID"))
     
-    STN <- station_meta() %>% filter(station_id == id_entered())
+    STN <- station_meta()$stn %>% filter(station_id == id_entered())
     D <- STN %>% filter(interval == "day") %>% select(end) %>% as.numeric()
     H <- STN %>% filter(interval == "hour") %>% select(end) %>% as.numeric()
     M <- STN %>% filter(interval == "month") %>% select(end) %>% as.numeric()
@@ -171,7 +171,7 @@ function(input, output, session) {
       validate(
         need(input$stn_id_input, "Invalid Station ID"))
       
-      stn_info <- station_meta() %>% filter(station_id == id_entered(),
+      stn_info <- station_meta()$stn %>% filter(station_id == id_entered(),
                                             interval == as.character(input$Intervals))
       
       stn_min = stn_info$start
@@ -324,11 +324,11 @@ function(input, output, session) {
   current_rds_date <- reactivePoll(1000, session,
                          # This function returns the time that the file was last modified
                          checkFunc = function() {
-                             file.info("station_meta_data.rds")$mtime[1]
+                             file.info("./database/stations.rds")$mtime[1] 
                          },
                          # This function returns the meta info of the file
                          valueFunc = function() {
-                              file.info("station_meta_data.rds")$mtime[1] %>% 
+                              file.info("./database/stations.rds")$mtime[1] %>% 
                                 base::as.Date(tz = "America/Vancouver")
                          }
                        )
@@ -363,8 +363,11 @@ function(input, output, session) {
             spin_map$show() #show spinner
             
             #takes quite long...like >10 seconds
-            weathercan::stations_dl(verbose = FALSE, quiet = TRUE) %>%
-              saveRDS(file = "station_meta_data.rds")
+            weathercan::stations_dl(verbose = FALSE, quiet = TRUE)
+            
+            meta_sys_rds <- file.path(rappdirs::user_data_dir("weathercan"), "stations.rds")
+            
+            file.copy(meta_sys_rds, "./database")
             
             return()
             
@@ -400,7 +403,7 @@ function(input, output, session) {
     })
     
     # 1. Data availability re-arrange
-    record_range <- station_meta() %>% 
+    record_range <- station_meta()$stn %>% 
     
                         # Grab hourly measurement record length
                         filter(interval == "hour") %>%
@@ -409,7 +412,7 @@ function(input, output, session) {
                         # Grab daily measurement record lengths
                         left_join(
                           # Grab daily measurement record length
-                          station_meta() %>% 
+                          station_meta()$stn %>% 
                             filter(interval == "day") %>%
                             select(station_name, station_id, D_start = start, D_end = end),
                           by = c("station_name", "station_id")
@@ -417,14 +420,14 @@ function(input, output, session) {
                         
                         left_join(
                           # Grab monthly measurement record length
-                          station_meta() %>% 
+                          station_meta()$stn %>% 
                             filter(interval == "month") %>%
                             select(station_name, station_id, M_start = start, M_end = end),
                           by = c("station_name", "station_id")
                         ) # End of Pipe for record_range
                         
     # 2. Group availability with other info
-    station_tibble <- station_meta() %>% 
+    station_tibble <- station_meta()$stn %>% 
                           group_by(station_id) %>% 
                           slice(1) %>% 
                           ungroup() %>%

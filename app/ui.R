@@ -66,7 +66,7 @@ shinyUI(fluidPage(
                     value = c(1900,2020), sep = ""),
       ),
       
-      useShinyalert(),useShinyjs(),
+      useShinyalert(force = TRUE),useShinyjs(),
       uiOutput("ECCC_button")
       
       
@@ -88,7 +88,7 @@ shinyUI(fluidPage(
                  br(),
                  "Station info last updated: ", textOutput("info_date"),
                  br(),
-                 useShinyalert(),
+                 useShinyalert(force = TRUE),
                  actionButton("update_meta", "Update Station Map from ECCC"),
                  br(),br(),
                  leafletOutput("MapPlot", height = 600),

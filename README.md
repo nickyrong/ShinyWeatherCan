@@ -5,8 +5,7 @@
 <br/>
 
 ## Overview
-ShinyWeatherCan is currently available at either: 
-- https://app.waterexplorer.net/shinyWeather/
+ShinyWeatherCan is currently available at: 
 - https://nickrongkp.shinyapps.io/WeatherCan/
 
 This app allows the user to enter a station ID to access climate data from:
@@ -32,7 +31,7 @@ Currently the app allows the user to:
 <br/>
 
 ## License
-Copyright © 2021 [Nick Rong](https://github.com/nickyrong) & [Nate Smith](https://github.com/WraySmith)
+Copyright © 2023 [Nick Rong](https://github.com/nickyrong) & [Nate Smith](https://github.com/WraySmith)
 
 Released under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

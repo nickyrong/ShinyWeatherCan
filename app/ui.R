@@ -98,8 +98,7 @@ shinyUI(fluidPage(
                  
         ), # End of Instruction tab
         
-        
-        tabPanel("Data Table",
+        tabPanel("Raw Data Table",
                  br(),
                  htmlOutput("data_preview_title"),
                  br(),
@@ -116,7 +115,14 @@ shinyUI(fluidPage(
                  h5("Figure is interactive, see top-right corner for available tools"),
                  plotlyOutput("pctmiss_plotly"),
                  br()
-        )
+        ), # End of Data Completeness tab
+        
+        tabPanel("Data Summary",
+                 br(),
+                 br(),
+                 h5("This tab is underconstruction"),
+                 br()
+        ) # End of Data Summary tab
         
       ) # End of tab setting
       

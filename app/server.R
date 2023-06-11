@@ -10,6 +10,14 @@ library(DT) # datatable()
 library(naniar) # for summarizing available data
 library(plotly) # interactive available data plotting
 
+# needed so shinyapps.io can find the repo for the weathercan package
+# options(
+#   repos =
+#     c(
+#       CRAN = "https://cran.rstudio.com",
+#       'https://ropensci.r-universe.dev' = "https://ropensci.r-universe.dev"
+#     )
+# )
 
 function(input, output, session) {
   

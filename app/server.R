@@ -26,9 +26,16 @@ function(input, output, session) {
   spin_datatable <- Waiter$new("datatable", html = spin_3k(), color = "black")
   spin_plot <- Waiter$new("pctmiss_plotly", html = spin_3k(), color = "black")
   
+  # Make sure to hide the global waiter after initialization
+  waiter_hide()
+  
   # Initial empty reactiveVal to store ECCC data & dataset title
   downloaded_ECCC <- reactiveVal(tibble())
   downloaded_title <- reactiveVal(as.character())
+  
+  # Add reactive values for secondary station data
+  secondary_ECCC <- reactiveVal(tibble())
+  secondary_title <- reactiveVal(as.character())
   
   # SideBar UI-------------------------------
   
@@ -48,67 +55,103 @@ function(input, output, session) {
   
   # observe main selector to decide which one to update
   observe({
-    
-    if (input$main_selector == 'Climate ID'){
-      
-      # Station Climate ID Selection by User
-      updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$stn$climate_id[!is.na(station_meta()$stn$climate_id)],
-                        selected = "1047672"
-      )
-      
-    } else if (input$main_selector == 'WMO ID'){
-      
-      # Station WMO ID Selection by User
-      updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$stn$WMO_id[!is.na(station_meta()$stn$WMO_id)],
-                        selected = NULL
-      )
-      
-      
-    } else if (input$main_selector == 'TC ID'){
-      
-      # Station TC ID Selection by User
-      updateSelectInput(session, 'stn_id_input',
-                        choices = station_meta()$stn$TC_id[!is.na(station_meta()$stn$TC_id)],
-                        selected = NULL
-      )
-      
-      
-    }
+    # Use tryCatch to prevent errors from stopping the app
+    tryCatch({
+      if (input$main_selector == 'Climate ID'){
+        # Get ALL climate IDs, not just the first 1000
+        climate_ids <- station_meta()$stn$climate_id[!is.na(station_meta()$stn$climate_id)]
+        
+        # Make sure there are no duplicates
+        climate_ids <- unique(climate_ids)
+        
+        # Sort IDs to make them easier to find
+        climate_ids <- sort(climate_ids)
+        
+        # Station Climate ID Selection by User - use ALL IDs
+        updateSelectizeInput(session, 'stn_id_input',
+                          choices = climate_ids,
+                          selected = "1047672",
+                          options = list(maxOptions = 9999999))
+        
+        # Update secondary station input with Climate IDs as well
+        updateSelectizeInput(session, 'secondary_stn_id',
+                            choices = climate_ids,
+                            selected = NULL,
+                            options = list(maxOptions = 9999999))
+        
+      } else if (input$main_selector == 'WMO ID'){
+        # Get ALL WMO IDs
+        wmo_ids <- station_meta()$stn$WMO_id[!is.na(station_meta()$stn$WMO_id)]
+        wmo_ids <- unique(sort(wmo_ids))
+        
+        # Station WMO ID Selection by User
+        updateSelectizeInput(session, 'stn_id_input',
+                          choices = wmo_ids,
+                          selected = NULL,
+                          options = list(maxOptions = 9999999))
+        
+      } else if (input$main_selector == 'TC ID'){
+        # Get ALL TC IDs
+        tc_ids <- station_meta()$stn$TC_id[!is.na(station_meta()$stn$TC_id)]
+        tc_ids <- unique(sort(tc_ids))
+        
+        # Station TC ID Selection by User
+        updateSelectizeInput(session, 'stn_id_input',
+                          choices = tc_ids,
+                          selected = NULL,
+                          options = list(maxOptions = 9999999))
+      }
+    }, error = function(e) {
+      # Log error but don't stop app
+      message("Error updating selectize: ", e$message)
+    })
   }) # End of updating climate ID enter
   
-  
-  # Translate the 3 IDs to the unified "station_id"
+  # Simplified and improved ID lookup function
   id_entered <- reactive({
+    validate(need(input$stn_id_input, "Invalid ID Input"))
     
-    validate(
-      need(input$stn_id_input, "Invalid ID Input"))
+    input_id <- as.character(input$stn_id_input)
+    message("Looking up ID: ", input_id)
     
-    if (input$main_selector == 'Climate ID'){
-      
-      station_meta()$stn %>% 
-        filter(climate_id == input$stn_id_input) %>% 
-        select(station_id) %>% slice(1) %>% as.numeric()
-
-    } else if (input$main_selector == 'WMO ID'){
-      
-      station_meta()$stn %>% 
-        filter(WMO_id == input$stn_id_input) %>% 
-        select(station_id) %>% slice(1) %>% as.numeric()
-      
-      
-    } else if (input$main_selector == 'TC ID'){
-      
-      station_meta()$stn %>% 
-        filter(TC_id == input$stn_id_input) %>% 
-        select(station_id) %>% slice(1) %>% as.numeric()
-
+    # Use a consistent approach for all ID types
+    if (input$main_selector == 'Climate ID') {
+      matches <- station_meta()$stn[which(as.character(station_meta()$stn$climate_id) == input_id), ]
+    } else if (input$main_selector == 'WMO ID') {
+      matches <- station_meta()$stn[which(as.character(station_meta()$stn$WMO_id) == input_id), ]
+    } else if (input$main_selector == 'TC ID') {
+      matches <- station_meta()$stn[which(as.character(station_meta()$stn$TC_id) == input_id), ]
     }
     
-
-  }) # End of translating the 3 IDs to station_id
+    if(nrow(matches) > 0) {
+      message("Found ", nrow(matches), " matches for ID ", input_id)
+      message("First match station_id: ", matches$station_id[1])
+      return(as.numeric(matches$station_id[1]))
+    } else {
+      message("No matches found for ID ", input_id)
+      type_name <- input$main_selector
+      validate(need(FALSE, paste(type_name, "not found:", input_id)))
+    }
+  })
   
+  # Same simplified approach for secondary station ID
+  secondary_id_entered <- reactive({
+    validate(need(input$secondary_stn_id, "Select a secondary station"))
+    
+    input_id <- as.character(input$secondary_stn_id)
+    message("Looking up secondary ID: ", input_id)
+    
+    matches <- station_meta()$stn[which(as.character(station_meta()$stn$climate_id) == input_id), ]
+    
+    if(nrow(matches) > 0) {
+      message("Found ", nrow(matches), " matches for secondary ID ", input_id)
+      message("First match station_id: ", matches$station_id[1])
+      return(as.numeric(matches$station_id[1]))
+    } else {
+      message("No matches found for secondary ID ", input_id)
+      validate(need(FALSE, paste("Secondary Climate ID not found:", input_id)))
+    }
+  })
   
   # Update dropdown menu, what time intervals are available
   observe({
@@ -177,27 +220,31 @@ function(input, output, session) {
     
   })
   
-  
   # update the data record range selector for daily & hourly data
   observe({
-    
     if(input$Intervals != 'month'){
-      
       validate(
         need(input$stn_id_input, "Invalid Station ID"))
       
-      stn_info <- station_meta()$stn %>% filter(station_id == id_entered(),
-                                            interval == as.character(input$Intervals))
+      stn_info <- station_meta()$stn %>% 
+                    filter(station_id == id_entered(),
+                           interval == as.character(input$Intervals))
       
-      stn_min = stn_info$start
-      stn_max = stn_info$end
-
-      updateSliderInput(session, "select_range", value = c(stn_min, stn_max),
-                        min = stn_min, max = stn_max, step = 1)
+      # Check if data exists for the selected interval
+      if(nrow(stn_info) > 0 && !is.na(stn_info$start) && !is.na(stn_info$end)) {
+        stn_min = stn_info$start
+        stn_max = stn_info$end
+        
+        updateSliderInput(session, "select_range", value = c(stn_min, stn_max),
+                          min = stn_min, max = stn_max, step = 1)
+      } else {
+        # If no data for the interval, set reasonable defaults
+        current_year <- as.numeric(format(Sys.Date(), "%Y"))
+        updateSliderInput(session, "select_range", value = c(current_year-10, current_year),
+                          min = 1900, max = current_year, step = 1)
+      }
     }
-    
   })
-  
   
   # Check if the selected range is too big
   range_check <- reactive({
@@ -399,7 +446,6 @@ function(input, output, session) {
         type = "error",
         showCancelButton = FALSE,
         animation = "slide-from-bottom",
-        
       )#end of shiny alert
     }
     
@@ -653,7 +699,194 @@ function(input, output, session) {
   })
   
   # End the app loading spinner----
-  waiter_hide()
   
+  # Output secondary station information
+  output$secondary_stn_info <- renderText({
+    validate(
+      need(input$secondary_stn_id, "Please select a secondary station")
+    )
+    
+    # Return Station Name & Info similar to primary station
+    map_plot_data() %>% 
+      filter(station_id == secondary_id_entered()) %>%
+      select(text) %>% as.character()
+  })
   
+  # Add a flag to track when both stations' data is available
+  stations_data_downloaded <- reactiveVal(FALSE)
+  
+  # Create an output to control conditional panel visibility
+  output$stations_data_ready <- reactive({
+    stations_data_downloaded()
+  })
+  outputOptions(output, "stations_data_ready", suspendWhenHidden = FALSE)
+  
+  # Download status message
+  output$download_status <- renderUI({
+    if(stations_data_downloaded()) {
+      HTML("<div style='color: green; margin-top: 10px;'><b>✓ Data downloaded successfully</b></div>")
+    } else {
+      HTML("")
+    }
+  })
+  
+  # Handle download button click
+  observeEvent(input$download_station_data, {
+    validate(
+      need(input$stn_id_input, "Select a primary station"),
+      need(input$secondary_stn_id, "Select a secondary station"),
+      need(input$secondary_stn_id != input$stn_id_input, "Primary and secondary stations must be different")
+    )
+    
+    # Get time range from primary station settings
+    start_year <- if(input$Intervals == 'month') {
+      min(station_meta()$stn %>% filter(station_id == id_entered(), interval == "day") %>% pull(start))
+    } else {
+      input$select_range[1]
+    }
+    
+    end_year <- if(input$Intervals == 'month') {
+      max(station_meta()$stn %>% filter(station_id == id_entered(), interval == "day") %>% pull(end))
+    } else {
+      input$select_range[2]
+    }
+    
+    # Limit the time range to avoid excessive downloads
+    # Only download up to 10 years of data for comparison
+    if((end_year - start_year) > 10) {
+      end_year <- start_year + 10
+    }
+    
+    # Show downloading message for primary station
+    shinyalert(
+      title = "Downloading Primary Station Data", 
+      text = "Please wait...",
+      type = "info",
+      showCancelButton = FALSE,
+      showConfirmButton = FALSE,
+      animation = "slide-from-bottom"
+    )
+    
+    # Try to download primary station data
+    tryCatch({
+      primary_data <- weathercan::weather_dl(
+        station_ids = id_entered(),
+        interval = "day",
+        start = as.Date(paste0(start_year, "-01-01")),
+        end = as.Date(paste0(end_year, "-12-31")),
+        quiet = TRUE
+      )
+      
+      # Verify we got data
+      if(nrow(primary_data) == 0) {
+        shinyjs::runjs("swal.close();")
+        shinyalert(
+          title = "Error", 
+          text = "No data available for primary station in the selected time range.",
+          type = "error"
+        )
+        stations_data_downloaded(FALSE)
+        return()
+      }
+      
+      # Close alert
+      shinyjs::runjs("swal.close();")
+      
+      # Show downloading message for secondary station
+      shinyalert(
+        title = "Downloading Secondary Station Data", 
+        text = "Please wait...",
+        type = "info",
+        showCancelButton = FALSE,
+        showConfirmButton = FALSE,
+        animation = "slide-from-bottom"
+      )
+      
+      # Try to download secondary station data
+      secondary_data <- weathercan::weather_dl(
+        station_ids = secondary_id_entered(),
+        interval = "day",
+        start = as.Date(paste0(start_year, "-01-01")),
+        end = as.Date(paste0(end_year, "-12-31")),
+        quiet = TRUE
+      )
+      
+      # Verify we got data for secondary station
+      if(nrow(secondary_data) == 0) {
+        shinyjs::runjs("swal.close();")
+        shinyalert(
+          title = "Error", 
+          text = "No data available for secondary station in the selected time range.",
+          type = "error"
+        )
+        stations_data_downloaded(FALSE)
+        return()
+      }
+      
+      # Store data in reactive values
+      downloaded_ECCC(primary_data)
+      secondary_ECCC(secondary_data)
+      
+      # Set downloaded titles - safely handle missing columns
+      primary_name <- if("station_name" %in% names(primary_data)) unique(primary_data$station_name) else "Unknown"
+      primary_id <- if("climate_id" %in% names(primary_data)) unique(primary_data$climate_id) else "Unknown"
+      primary_start <- if("year" %in% names(primary_data)) min(primary_data$year, na.rm = TRUE) else NA
+      primary_end <- if("year" %in% names(primary_data)) max(primary_data$year, na.rm = TRUE) else NA
+      
+      secondary_name <- if("station_name" %in% names(secondary_data)) unique(secondary_data$station_name) else "Unknown"
+      secondary_id <- if("climate_id" %in% names(secondary_data)) unique(secondary_data$climate_id) else "Unknown"
+      secondary_start <- if("year" %in% names(secondary_data)) min(secondary_data$year, na.rm = TRUE) else NA
+      secondary_end <- if("year" %in% names(secondary_data)) max(secondary_data$year, na.rm = TRUE) else NA
+      
+      # Format date ranges properly
+      primary_range <- if(!is.na(primary_start) && !is.na(primary_end)) {
+        paste0(primary_start, "-", primary_end)
+      } else {
+        "Unknown range"
+      }
+      
+      secondary_range <- if(!is.na(secondary_start) && !is.na(secondary_end)) {
+        paste0(secondary_start, "-", secondary_end)
+      } else {
+        "Unknown range"
+      }
+      
+      downloaded_title(paste0(primary_name, " (Climate ID: ", primary_id, ") Daily: ", primary_range))
+      secondary_title(paste0(secondary_name, " (Climate ID: ", secondary_id, ") Daily: ", secondary_range))
+      
+      # Set flag to indicate data is ready
+      stations_data_downloaded(TRUE)
+      
+      # Close alert and show success message
+      shinyjs::runjs("swal.close();")
+      shinyalert("Download Complete!", "Both stations' data has been downloaded successfully.", type = "success")
+      
+    }, error = function(e) {
+      # Handle errors during download
+      shinyjs::runjs("swal.close();")
+      shinyalert(
+        title = "Error", 
+        text = paste("Failed to download station data:", e$message),
+        type = "error"
+      )
+      stations_data_downloaded(FALSE) # Ensure flag is set to false
+    })
+  })
+  
+  # Modify download_both_stations to use cached data instead of initiating downloads
+  download_both_stations <- reactive({
+    validate(
+      need(stations_data_downloaded(), "Please download station data first by clicking the 'Download Station Data' button")
+    )
+    
+    # Return the already downloaded data
+    list(
+      primary = downloaded_ECCC(),
+      secondary = secondary_ECCC()
+    )
+  })
+  
+  # Record comparison plot - leave as is, it depends on download_both_stations()
+  # Frequency pairing plot - leave as is, it depends on download_both_stations() 
+  # The infill button handler - leave as is, it depends on download_both_stations()
 }

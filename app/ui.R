@@ -7,6 +7,8 @@ library(plotly)
 library(waiter) #loading screen/spinner
 library(shinyalert) # pop-up message
 library(shinyjs) # needed for the pop-up to auto close
+library(DT) # for data tables
+library(ggplot2) # for plotting
 
 
 shinyUI(fluidPage(
@@ -98,7 +100,8 @@ shinyUI(fluidPage(
                  
         ), # End of Instruction tab
         
-        tabPanel("Raw Data Table",
+        
+        tabPanel("Data Table",
                  br(),
                  htmlOutput("data_preview_title"),
                  br(),
@@ -119,6 +122,9 @@ shinyUI(fluidPage(
         
         tabPanel("Data Summary",
                  br(),
+                 h4("Infill Missing Data Using Quantile Mapping from Nearby Stations"),
+                 p("This feature allows you to infill missing data using quantile mapping from nearby ECCC stations."),
+                 p("The process identifies nearby stations with overlapping periods of record, creates statistical relationships between the stations, and uses those relationships to estimate missing values."),
                  br(),
                  h5("This tab is underconstruction"),
                  br()

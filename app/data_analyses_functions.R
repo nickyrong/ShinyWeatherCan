@@ -1,4 +1,3 @@
-
 # Station Dataset Summarized
 # Uses user input from the resolution dropdown
 Dataset_Summarize <- function(station_number, summary_reso, wy_month) {
@@ -53,3 +52,48 @@ Dataset_Summarize <- function(station_number, summary_reso, wy_month) {
   
   return(TS)
 } # EOF for flow period summary
+
+# Helper functions for handling NA values with a threshold
+#------------------------------------------------------------------------------
+# These functions return NA if the number of non-NA values is less than the threshold
+complete_sum = function(x, Threshold) {base::ifelse(sum(!is.na(x))>=Threshold, sum(x, na.rm = TRUE), NA_real_)}
+complete_max = function(x, Threshold) {base::ifelse(sum(!is.na(x))>=Threshold, max(x, na.rm = TRUE), NA_real_)}
+complete_min = function(x, Threshold) {base::ifelse(sum(!is.na(x))>=Threshold, min(x, na.rm = TRUE), NA_real_)}
+complete_mean = function(x, Threshold) {base::ifelse(sum(!is.na(x))>=Threshold, mean(x, na.rm = TRUE), NA_real_)}
+complete_count = function(x, Threshold) {base::ifelse(sum(!is.na(x))>=Threshold, sum(!is.na(x)), NA_real_)}
+
+# Monthly summarization function for ECCC weather data
+#------------------------------------------------------------------------------
+summarize_monthly <- function(df, cols, min_days = 28){
+    df_summarized <- df |>
+      dplyr::group_by(station_id, year, month) |>
+      # ignore NA depends on threshold
+      dplyr::summarise(across(all_of(cols), 
+                              list(mean = ~complete_mean(., Threshold = min_days), 
+                                   min = ~complete_min(., Threshold = min_days), 
+                                   max = ~complete_max(., Threshold = min_days), 
+                                   sum = ~complete_sum(., Threshold = min_days), 
+                                   count = ~complete_count(., Threshold = 0)), 
+                              .names = "{.col}_{.fn}"), .groups = "drop") |>
+      arrange(station_id, year, month)
+
+    return(df_summarized)
+}
+
+# Yearly summarization function for ECCC weather data
+#------------------------------------------------------------------------------
+summarize_yearly <- function(df, cols, min_months = 12){
+    df_summarized <- df |>
+      dplyr::group_by(station_id, year) |>
+      # ignore NA depends on threshold
+      dplyr::summarise(across(all_of(cols), 
+                              list(mean = ~complete_mean(., Threshold = min_months), 
+                                   min = ~complete_min(., Threshold = min_months), 
+                                   max = ~complete_max(., Threshold = min_months), 
+                                   sum = ~complete_sum(., Threshold = min_months), 
+                                   count = ~complete_count(., Threshold = 0)), 
+                              .names = "{.col}_{.fn}"), .groups = "drop") |>
+      arrange(station_id, year)
+
+    return(df_summarized)
+}

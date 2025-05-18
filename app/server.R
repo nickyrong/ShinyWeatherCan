@@ -32,10 +32,17 @@ function(input, output, session) {
   
   # SideBar UI-------------------------------
   
+  # Determine meta database location
+  if(file.exists("./database/stations.rds")) {
+    db_location <- "./database/stations.rds" # this when the app is running on local machine
+  } else if (file.exists("../../database/stations.rds")) {
+    db_location <- "../../database/stations.rds" # this when the app is running on KP server
+  } 
+
   # Load Archived Station Data (new download takes about 15 seconds)
   station_meta <- reactiveFileReader(intervalMillis = 1000, 
                                      session,
-                                     filePath = "./database/stations.rds", 
+                                     filePath = db_location, 
                                      readFunc = readRDS
                                      )
   
@@ -375,7 +382,7 @@ function(input, output, session) {
             
             meta_sys_rds <- file.path(rappdirs::user_data_dir("weathercan"), "stations.rds")
             
-            file.copy(meta_sys_rds, "./database")
+            file.copy(meta_sys_rds, paste0(getwd(),"/database/"), overwrite = TRUE)
             
             return()
             

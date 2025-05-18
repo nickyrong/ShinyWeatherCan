@@ -28,6 +28,7 @@ Currently the app allows the user to:
 - Access hourly, daily, or monthly climate data from ECCC for a selected Climate Station ID. WMO or TC IDs can be used if they are known to the user.
 - Use the `Data Table` tab to preview the accessed data. Users may download the data as a `.csv` file for further processing and analysis.
 - View the `Data Completeness` tab which provides an overview of the completeness of data variables in each year. The plot is interactive and can be zoomed in or out.
+- Use the `Infill Data` tab to fill gaps in climate records using quantile mapping from nearby stations. This feature helps create more complete datasets by leveraging data from neighboring stations while preserving the statistical characteristics of the target station.
 <br/>
 
 ## License

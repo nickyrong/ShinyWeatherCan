@@ -33,7 +33,7 @@ Currently the app allows the user to:
 ## License
 Copyright © 2023 [Nick Rong](https://github.com/nickyrong) & [Nate Smith](https://github.com/WraySmith)
 
-Released under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Released under the [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an “AS IS” BASIS,

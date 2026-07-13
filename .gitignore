@@ -5,3 +5,11 @@
 
 app/rsconnect
 app/rsconnect/shinyapps.io/nickrongkp/WeatherCan.dcf
+
+# Python bytecode (ERA5 extractor)
+__pycache__/
+*.pyc
+
+# ERA5 / CDS secrets — NEVER commit an API key
+CDSAPI_KEY
+.cdsapirc
